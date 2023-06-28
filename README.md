@@ -13,3 +13,6 @@
 
 - CL/CD
   [GithubAction](github/action.md)
+
+- Go
+  [go语言小技巧](goland/gotips.md)
