@@ -10,7 +10,7 @@
 
 例如，我想按照数字大小对文件**num.txt**进行排序就可以这样写
 
-``` shell
+```shell
 cat num.txt | sort -n -k 1
 ```
 
@@ -18,12 +18,12 @@ cat num.txt | sort -n -k 1
 
 - 去除所有制表符并且包含空格
 
-``` shell
+```shell
 cat file.txt | tr -d '[:space:]'
 ```
 
 - 去除所有空格
 
-``` shell
+```shell
 cat file.txt | tr -d ''
 ```
