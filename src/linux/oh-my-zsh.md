@@ -32,4 +32,4 @@ macos是一组macos系统上特有的命令，linux可不必添加。
 |use|主题名|加载这个主题|
 |list|无|显示所有主题|
 
-不过，我的主题使用的是 [powerlevel10k/powerlevel10k](https://github.com/romkatv/powerlevel10k),这个主题非常棒🎉。根据教程安装完毕后可以运行p10k configure来对主题进行一些自定义配置。
+不过，我的主题使用的是 [powerlevel10k](https://github.com/romkatv/powerlevel10k),这个主题非常棒🎉。根据教程安装完毕后可以运行p10k configure来对主题进行一些自定义配置。

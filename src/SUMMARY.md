@@ -6,15 +6,19 @@
 
 # CL/CD
 
-- [github Action](github/action.md)
-
+- [Github](github/readme.md)
+  - [github Action](github/action.md)
+  - [ssh key 和 gpg keys](github/ssh_and_gpg.md)
+  
 # linux
 
 - [shell使用帮助](linux/shell/util.md)
-  - [vim使用](linux/vim.md)
-  - [makefile](makefile/makefile.md)
   - [你不得不使用的on-my-zsh](linux/oh-my-zsh.md)
   - [高效率（装逼）使用tmux](linux/oh-my-tmux.md)
+- [工具]()
+  - [docker]()
+  - [makefile](makefile/makefile.md)
+  - [vim使用](linux/vim.md)
 
 # 编程语言
 
@@ -25,5 +29,13 @@
   - [record]()
   - [密封类]()
 - [kotlin]()
-- [go语言小技巧](goland/gotips.md)
-- [rust语言小技巧]()
+  - [kotlin小技巧]()
+  - [kotlin关键字表]()
+- [go语言]()
+  - [go语言小技巧](goland/gotips.md)
+- [rust]()
+  - [rust语言小技巧]()
+
+# 人体调优
+
+- [人体调优相关资源](health/resource.md)
