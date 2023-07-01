@@ -27,4 +27,3 @@ cat file.txt | tr -d '[:space:]'
 ``` shell
 cat file.txt | tr -d ''
 ```
-

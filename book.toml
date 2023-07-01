@@ -1,6 +1,7 @@
 [book]
 authors = ["Casey Cheng"]
-language = "en"
+language = "zh-CN"
 multilingual = false
 src = "src"
 title = "note"
+
