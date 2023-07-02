@@ -20,14 +20,15 @@
 由于Spring框架在Java历史中占据了举足轻重的地位，谈及Ioc容器就避免不了它。
 Ioc容器是一个实现自动依赖注入的一个框架，它管理对象的创建和生命周期，并自动寻找到程序依赖注入到类中。可以将它理解为应用程序中组件仓库，你可以提供任何组件给它，它通过程序内容自动（是需要编写定义的）管理组件。
 
-可以依据下面的完整代码来创建一个类似于Spring的Ioc容器哦，只需要添加一个包扫描，使用包扫描来扫描class字节码，通过classloader进行加载，加载完毕后就可以疯狂遍历里面的内容了，疯狂遍历！不要担心消耗CPU和内存，CPU速度非常快，这么点字节码占不了多少内存。
+ps：当初是轻量级，现在是重量级+巨无霸
+
+可以依据下面的完整代码来创建一个类似于Spring的Ioc容器，只需要添加一个包扫描，使用包扫描来扫描class字节码，通过classloader进行加载，加载完毕后就可以疯狂遍历里面的内容了，疯狂遍历！不要担心消耗CPU和内存，CPU速度非常快，这么点字节码占不了多少内存。
 
 过程大致为
 
 ![ioc](./image/Snipaste_2023-07-02_16-32-36.png)
 
-
-ps：当初是轻量级，现在是重量级+巨无霸
+### 创建依赖链
 
 例如人需要手机才能完成打电话，这时候关系就应该像这样。
 
@@ -117,6 +118,97 @@ provide方法获取了两个参数，一个需要被创建出来的类型，一�
 
 这两个是ioc容器最核心的方法，其它的都是锦上添花，不要担心数据量或数据结构的复杂性带来的耗时，
 因为最大的耗时永远都在IO，创建这么点数据炸不了机器，内存也该用就用。
+
+### 在已被创建的实例池中通过某一特性来获取集合
+
+在下面的完整代码中，定义了这么一个接口
+
+```java
+<T, Coll extends Collection<T>> Coll collect(Class<T> type, Supplier<? extends Coll> container);
+```
+
+在我的定义中，它通过接收一个class对象和一个供给者供给`Collection`方法进行调用，判断type是接口还是类定义来进行查找内容，在我的构思中，应该在一个地方一次对这些内容配置完毕，不应该东一个，西一个。
+
+所以我假设了在方法运行完毕后，不应该再提供内容给容器，所以我在抽象类中定义了一个查询缓存，先去缓存中查找，缓存中找不到再开始运行真正的查询方法。
+
+由于Java是可被擦除的泛型，所以将带泛型接口传进去查询出来的将会是是所有实现了该泛型的对象，需要自行对内容进行判断。
+
+**这是定义在抽象类中的查询方法.**
+
+```java
+    protected final Map<Class<?>, Collection<Object>> cache = new HashMap<>();
+
+    @SuppressWarnings("unchecked")
+    protected <T> Collection<T> search(Class<T> type) {
+        if (type == null) {
+            throw new NullPointerException("type are null");
+        }
+        if (cache.containsKey(type)) {
+            return (Collection<T>) cache.get(type);
+        }
+        if (type.isInterface()) {
+            return searchByInterface(type);
+        } else {
+            return searchByType(type);
+        }
+    }
+
+    /**
+     * 通过类型搜索
+     *
+     * @param type
+     * @param <T>
+     * @return
+     */
+    private <T> Collection<T> searchByType(Class<?> type) {
+        return searchByAction(type, entry -> entry.getKey().equals(type));
+    }
+
+    /**
+     * 通过接口搜索
+     *
+     * @param interfaceType
+     * @param <T>
+     * @return
+     */
+    private <T> Collection<T> searchByInterface(Class<?> interfaceType) {
+        return searchByAction(interfaceType, entry -> Arrays.asList(entry.getKey().getInterfaces()).contains(interfaceType));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> Collection<T> searchByAction(Class<?> type, Predicate<Map.Entry<Class<?>, List<Pair<String, Object>>>> action) {
+        try {
+            final var result = context
+                    .entrySet()
+                    .stream()
+                    .filter(action)
+                    .map(Map.Entry::getValue)
+                    .flatMap(Collection::stream)
+                    .map(Pair::second)
+                    .toList();
+            cache.put(type, result);
+
+            return (Collection<T>) result;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+```
+
+通过类型进行搜索和通过接口进行搜索只有在过滤方法才会有具体的差别，所以我将其抽象出来成为一个单独的方法，分别定义两个方法的搜索逻辑，该`search`方法为子类方法的`collect`进行了支持。
+
+使用方法如下，可以将下面三个变量打印出来看看内容。
+
+```java
+final var context = AppContent.create("app")
+                .provide("卧槽","config")
+                .provide("2")
+                .provide(1)
+                .provide(3);
+        final var strings = context.collect(String.class, ArrayList::new);
+        final var integers = context.collect(Integer.class, ArrayList::new);
+        final var charSequences = context.collect(CharSequence.class, ArrayList::new);
+```
 
 ## 完整代码
 
@@ -505,7 +597,11 @@ class AppContent extends BaseContext {
     public <T, Coll extends Collection<T>> Coll collect(Class<T> type, Supplier<? extends Coll> container) {
         final var result = super.search(type);
         final var ts = container.get();
-        ts.addAll(result);
+        if (isNull(result)) {
+            ts.addAll(Collections.emptyList());
+        } else {
+            ts.addAll(result);
+        }
         return ts;
     }
 }
