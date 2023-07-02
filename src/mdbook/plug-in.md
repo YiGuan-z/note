@@ -57,7 +57,7 @@ command = "mdbook-mermaid"
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
 ```
 
-### How use
+### How use mermaid
 
 Add it in your md file.
 
@@ -72,3 +72,16 @@ Add it in your md file.
 ```
 
 Run the mdbook and veiw the result
+
+tips:
+
+[graph TD;] is a directive in Mermaid syntax used to define the direction of the graphgraph indicates that this is a graph, 
+and TD stands for Top Down.
+Mermaid is a tool that allows you to generate diagrams and flowcharts using a syntax similar to Markdown.
+
+In addition to TD, there are several other directions to choose from:
+
+graph TB or graph TD: Top to Bottom
+graph BT: Bottom to Top
+graph LR: Left to Right
+graph RL: Right to Left
