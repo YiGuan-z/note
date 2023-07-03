@@ -350,7 +350,7 @@ class AppContent extends BaseContext {
                 .filter(pair -> pair.first().equals(name))
                 .findFirst();
         result.orElseThrow(() -> new NullPointerException(String.format("名为%s的对象不存在", name)));
-        return (T) result.get();
+        return (T) result.get().second();
     }
 
     /**
