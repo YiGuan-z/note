@@ -18,8 +18,8 @@ ssh-keygen -t ed25519 -C "你的GitHub邮件地址"
 - 给你的Github账户设置公钥
   - 找到你的ssh目录，它一般在`~/.ssh`中
   - 找到公钥文件，一般是以.pub结尾
-  - 打开GitHub的账户设置，找到SSH and GPG keys，点击 New SSH key，标题自己随便取一个，key的内容就将公钥的内容复制过去。![ssh Option](./image/findGitHubSSH.png)
-  - 最后点击保存![github save ssh](./image/save-ssh.png)
+  - 打开GitHub的账户设置，找到SSH and GPG keys，点击 New SSH key，标题自己随便取一个，key的内容就将公钥的内容复制过去。![ssh Option](./image/findGitHubSSH.jpg)
+  - 最后点击保存![github save ssh](./image/save-ssh.jpg)
 
 
 

@@ -28,7 +28,7 @@ brew install tmux
 
 tmux是用来分离会话使用的程序，要退出当前会话使用`control + b d`将会话转入后台运行，同样，也支持多个终端连接到同一个会话，这时我们可以多开几个终端，并在每个终端上输入`tmux a`即可在每个终端中同步显示会话。
 
-![tmux](./image/tmux-example.png)
+![tmux](./image/tmux-example.jpg)
 
 ## 使用oh-my-tmux进行增强体验
 
