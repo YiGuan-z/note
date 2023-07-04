@@ -3,7 +3,7 @@
 > 本文讲是由官方示例演变而来，为防止官方变动，我fork了一份到我的账号下[仓库链接🔗](https://github.com/YiGuan-z/ktor-samples.git)
 
 官方分了三个根出来，我就简便一点，只对backendMain进行说明，使用[wscat](../../util/wscat.md)对其进行测试。
-
+<!-- toc -->
 ## 配置ktor启动
 
 在主方法中配置嵌入式服务器
@@ -16,7 +16,7 @@ fun main(){
 }
 ```
 
-## 需要实现的功能
+## [需要实现的功能](#再来看看我们打算实现的功能)
 
    1. 支持用户实时聊天
    2. 支持用户使用一些控制命令
@@ -133,7 +133,7 @@ class ChatServer {
 
 ```
 
-## 再来看看我们打算实现的功能 {#需要实现的功能}
+## [再来看看我们打算实现的功能](#需要实现的功能)
 
 - 统计用户在线数量由`ChatServer`的`memberNames`做了
 - 用户的控制命令由`ChatServer`的后续方法进行负责
@@ -353,7 +353,7 @@ private fun Route.configureWS() {
 
 两个TODO都被我们解决了，现在还有最后一个TODO，它用来处理我们的服务器交互逻辑。
 
-我们还缺少最后一个交互逻辑，我们定义一个方法receivedMessage，它接收两个参数，一个是sissionId一个是读取到的帧数据。
+我们还缺少最后一个交互逻辑，我们定义一个方法receivedMessage，它接收两个参数，一个是session id一个是读取到的帧数据。
 
 我们可以先把TODO替换为`receivedMessage(session.id, frame.readText())`。
 
