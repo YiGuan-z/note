@@ -32,16 +32,20 @@
   - [lambda表达式]()
   - [record]()
   - [密封类]()
+  
 - [kotlin]()
   - [kotlin小技巧]()
   - [kotlin关键字表]()
   - [ktor]()
     - [使用ktor创建一个webSocket聊天服务器](kotlin/ktor/chatServer.md)
       - [完整代码](kotlin/ktor/code.md)
+  - [kodein-di](kotlin/kodein/learnDI.md)
 - [go语言]()
   - [go语言小技巧](goland/gotips.md)
 - [rust]()
   - [rust语言小技巧]()
+- [一些杂谈]()
+  - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
 
 # 人体调优
 
