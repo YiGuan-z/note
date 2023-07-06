@@ -40,6 +40,7 @@
     - [使用ktor创建一个webSocket聊天服务器](kotlin/ktor/chatServer.md)
       - [完整代码](kotlin/ktor/code.md)
   - [kodein-di](kotlin/kodein/learnDI.md)
+    - [更多示例](kotlin/kodein/more.md)
 - [go语言]()
   - [go语言小技巧](goland/gotips.md)
 - [rust]()

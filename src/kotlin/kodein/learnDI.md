@@ -209,4 +209,4 @@ val di = DI {
 
 [koden 平台兼容性与通用型](https://kosi-libs.org/kodein/7.19/platform-and-genericity.html)
 
-[dsl语法介绍](https://zhuanlan.zhihu.com/p/110757158)
+[dsl介绍](https://zhuanlan.zhihu.com/p/110757158)
