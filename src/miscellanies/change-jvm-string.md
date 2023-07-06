@@ -74,20 +74,23 @@ Unable to make field private final byte[] java.lang.String.value accessible: mod
 同时，又有一位动手能力强的使用了unsafe进行修改，这是Java反射底层的逻辑支持库。同时，我也想知道unsafe在高版本Java上会不会被限制，于是我改造了我的代码。
 
 ```kotlin
-val unsafe = Unsafe::class.java.getDeclaredField("theUnsafe")
-            .apply { isAccessible = true }.get(null) as Unsafe
-val version = System.getProperty("java.version")
-println("current java version: $version")
+fun main(){
 
-val field = String::class.java.getDeclaredField("value").apply { this.isAccessible = true }
+  val unsafe = Unsafe::class.java.getDeclaredField("theUnsafe")
+              .apply { isAccessible = true }.get(null) as Unsafe
+  val version = System.getProperty("java.version")
+  println("current java version: $version")
 
-println(s)
-val addr = unsafe.objectFieldOffset(field)
-unsafe.putObject(s, addr, byteArrayOf('b'.toByte()))
+  val field = String::class.java.getDeclaredField("value").apply { this.isAccessible = true }
 
-println(s)
-println("a")
+  println(s)
+  val addr = unsafe.objectFieldOffset(field)
+  unsafe.putObject(s, addr, byteArrayOf('b'.toByte()))
 
+  println(s)
+  println("a")
+
+}
 ```
 
 以下是运行情况
