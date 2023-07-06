@@ -32,6 +32,7 @@
   - [lambda表达式]()
   - [record]()
   - [密封类]()
+  - [引用类型,强软弱虚](java/ref/learn.md)
   
 - [kotlin]()
   - [kotlin小技巧]()

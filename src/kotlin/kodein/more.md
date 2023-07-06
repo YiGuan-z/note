@@ -123,7 +123,7 @@ val di = DI{
 } 
 ```
 
-使用数据类传递这些参数不会导致内存浪费，也不会导致不优雅，尽情使用吧。（可以使用软引用或弱引用）
+使用数据类传递这些参数不会导致内存浪费，也不会导致不优雅，尽情使用吧。（只要没有对象将其引用起来，它就会因为缺乏引用而被jvm自动干掉）
 
 ### 缓存实例构建工厂
 
@@ -159,8 +159,56 @@ val di = DI{
 
 ### 软引用和弱引用
 
-TODO
+这些对象在jvm中不能保证其一直存在，如果没有多个引用，则会被CG干掉，然后重新创建。
+因此，在程序的声明周期中，提供的函数可能会多次调用，也可能不会多次调用。
+
+#### [软引用](../../java/ref/learn.md#软引用)
+
+*示例：创建一个给定时间仅存在一次的缓存对象：软引用：*
+
+```kotlin
+val di = DI {
+    bind<Map> { singleton(ref = softReference) { WorldMap() } }
+}
+
+```
+
+#### [弱引用](../../java/ref/learn.md#弱引用)
+
+*示例：创建一个给定时间仅存在一次的缓存对象：虚引用：*
+
+```kotlin
+val di = DI {
+    bind<Map> { singleton(ref = weakReference) { WorldMap() } }
+}
+```
+
+#### ThreadLocal
+
+这与标准的单例绑定相同，只是每个线程能够获取到独属于自己的实例。因此在第一次请求实例时，每个需要实例的线程将调用一次函数进行创建。
+
+*示例：创建一个缓存对象，每个线程都有一个：*
+
+```kotlin
+    bind<Cache> { singleton(ref = threadLocal) { LRUCache(16*1024) } }
+
+```
+
+### 绑定常量
+
+绑定常量通常可以用来当作配置
+
+*示例：创建两个常量绑定：*
+
+```kotlin
+val di = DI{
+    bindConstant(tag="port") {8080}
+    bindConstant(tag="password") {"1234567890"}
+}
+```
 
 ### 引用与参考
 
 [依赖项目的声明](https://kosi-libs.org/kodein/7.19/core/bindings.html)
+
+[引用类型](../../java/ref/learn.md)
