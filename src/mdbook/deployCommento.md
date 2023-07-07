@@ -11,5 +11,8 @@ Commento提供了三种自托管逻辑，分别为使用二进制文件、Docker
 
 ## Docker
 
+### 编写docker-compose
+
+
 
 ## 源码编译

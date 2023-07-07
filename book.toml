@@ -13,6 +13,7 @@ renderer = ["html"]
 default-theme = "navy"
 git-repository-url = "https://github.com/YiGuan-z/note"
 edit-url-template = "https://github.com/YiGuan-z/note/edit/main/{path}"
+additional-js = ["assets/commento.js"]
 
 [output.html.fold]
 enable = true
