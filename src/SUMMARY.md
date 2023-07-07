@@ -20,6 +20,7 @@
   - [makefile](makefile/makefile.md)
   - [vim使用](linux/vim.md)
   - [mdbook](mdbook/plug-in.md)
+    - [Commento评论系统部署](mdbook/deployCommento.md)
   - [wscat](util/wscat.md)
 
 # 编程语言
