@@ -9,9 +9,11 @@ title = "note"
 command = "mdbook-toc"
 renderer = ["html"]
 
-[preprocessor.mermaid]
-command = "mdbook-mermaid"
-
 [output.html]
-additional-js = ["mermaid.min.js", "mermaid-init.js"]
 default-theme = "navy"
+git-repository-url = "https://github.com/YiGuan-z/note"
+edit-url-template = "https://github.com/YiGuan-z/note/edit/main/{path}"
+
+[output.html.fold]
+enable = true
+level = 0
