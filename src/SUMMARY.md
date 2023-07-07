@@ -29,9 +29,9 @@
   - [300行给你一个小型Ioc容器](java/ioc/createIoc.md)
     - [完整代码](java/ioc/context.md)
   - [虚拟机](java/bytecode/vm.md)
-  - [stream流运算](Java/stream/stream.md)
-  - [lambda表达式]()
-  - [record]()
+  - [stream流运算](java/stream/stream.md)
+  - [lambda表达式](java/lambda/lambda.md)
+  - [record](java/record/record.md)
   - [密封类]()
   - [引用类型,强软弱虚](java/ref/learn.md)
   

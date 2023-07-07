@@ -17,4 +17,4 @@ additional-js = ["assets/commento.js"]
 
 [output.html.fold]
 enable = true
-level = 0
+level = 1
