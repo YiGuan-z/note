@@ -76,3 +76,7 @@ test:
 ```
 
 将会输出olleH，这是Hello的反转版本。
+
+## 外部链接
+
+[go语言makefile的示例](https://github.com/YiGuan-z/port-scanner/blob/master/makefile)
