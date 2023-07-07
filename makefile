@@ -4,9 +4,9 @@ mdbook-toc-version = 0.12.0
 build:
 	mdbook build
 
-server:
-	mdbook server
+serve:
+	mdbook serve
 
-dependence:
+prod:
 	cargo install --version $(mdbook-version) mdbook
 	cargo install --version $(mdbook-toc-version) mdbook-toc
