@@ -1,12 +1,14 @@
 # lambda表达式
 
-lambda表达式本质上是一块被接口保存下来的一段方法，由于这种lambda接口通常只有一个方法，所以我们不需要用`new Runnable`接口，而是可以直接使用`()->{}`来简化。
+lambda表达式本质上是一块被保存下来的一段方法，由于这种lambda接口通常只有一个方法，所以我们不需要用`new Runnable`接口，而是可以直接使用`()->{}`来简化。
+lambda允许将函数作为参数进行传递，使代码变得简洁紧凑。
 
 ## 没有简化
 
 没有使用lambda写法的`runnable`如：
 
 ```java
+//一个匿名内部类
 Runable run = new Runnable(){
     @Override
     void run(){
