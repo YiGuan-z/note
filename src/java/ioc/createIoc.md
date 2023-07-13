@@ -9,13 +9,13 @@
 ## 注意
 
 - 仅供参考，以阐明Ioc容器到底是个什么东西，以及尝试编写一个小型的Ioc容器。
-- stream到处都是，练习练习stream（不要练习到steam🙅‍♂️）。
-- 需要理解一下函数式编程。
+- [stream](../stream/stream.md)到处都是，练习练习stream（不要练习到steam🙅‍♂️）。
+- 需要理解一下[函数式编程](../lambda/lambda.md)。
   - 其实也很简单，本质上是在对象中保存了一段代码，以供需要时运行。
   - 又因为一系列的简化规则，所以看上去可能有点不明所以。
 - 使用了高版本的Java特性，如果不支持该特性，可以自己尝试将其去掉。
-  - 密封类
-  - 记录类
+  - [密封类](../sealed/learn.md)
+  - [记录类](../record/record.md)
 
 ## 正文
 
@@ -207,5 +207,8 @@ final var context = AppContent.create("app")
         final var charSequences = context.collect(CharSequence.class, ArrayList::new);
 ```
 
+## END
+
 [完整代码](./context.md#完整代码)
+
 [GitHub仓库](https://github.com/YiGuan-z/mini_ioc)
