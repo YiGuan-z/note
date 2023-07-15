@@ -89,7 +89,7 @@ Caused by: java.lang.ClassNotFoundException: org.jetbrains.kotlin.name.ClassId
 刚看到的时候不明所以，直到我使用debug定位到结果对象的时候才发现，需要自行对进行映射来构建结果集，不然的话结果集就是它自己帮你实现的一个对象。
 
 ```kotlin
-val users = userQuerySource.select().limit(page, size).map { Users.createEntity(row = it) }
+val users = userQuerySource.select().limit(10).map { Users.createEntity(row = it) }
 ```
 
 >这是一个ktorm中的分页查询方法，我使用它的定义表来对数据结果进行创建，ktorm中对数据模型的定义是接口，使用`data class`会在序列api中无法使用`add`方法，所以我也就保持了使用接口，这就意味着我必须写一个映射方法来对ktorm中查询出来的结果集进行转换（强制使用DTO，VO进行序列化），这一点还行。但是我必须写一个又臭又长的映射方法，例如。
@@ -128,3 +128,47 @@ fun projectsWhere(condition: ColumnDeclaring<Boolean>): List<UserDTO> {
 ```kotlin
 val users:List<UserDTO> = userQuerySource.select().limit(page, size).mapDTO()
 ```
+
+最终编写出来的方法效果是这样的。
+
+```kotlin
+fun <R : Any> Query.map(table: BaseTable<*>, r: KClass<R>): List<R> {
+    val name = r.simpleName
+    val constructor = r.primaryConstructor
+    return if (constructor != null) {
+        mapTo(constructor, table)
+    } else {
+        throw NullPointerException("找不到$name 的主构造函数")
+    }
+}
+
+fun <R : Any> Query.mapTo(
+    constructor: KFunction<R>,
+    table: BaseTable<*>
+): ArrayList<R> {
+    val parameters = constructor.parameters
+    //将构造器中存在的列映射为table中的Column
+    val columns = parameters.map { param -> runCatching { table[param.name!!] }.getOrNull() }
+    val transform: (row: QueryRowSet) -> R = { row ->
+        val columnsData = columns.map {
+            if (it != null) {
+                row[it]
+            } else {
+                null
+            }
+        }.toTypedArray()
+        constructor.call(*columnsData)
+    }
+    return mapTo(ArrayList(), transform)
+}
+```
+
+使用效果
+
+```kotlin
+val map: List<UserDTO> = users.select().limit(10).map(Users, UserDTO::class)
+```
+
+通过DTO的主构造函数中的参数名来对`QueryRowSet`的数据列进行映射，再在transform方法里面通过获取被映射的列来获取数据并调用构造器方法。
+
+这是暂时的解决思路。
