@@ -58,3 +58,8 @@ ktor的参数解析前缀需要 `-P:p=x` 这种格式才会进入环境中，并
 ### 并集
 
 A u B A={1,2,3} B={3,4,5} A u B = {1,2,3,4,5}
+
+# 链接
+
+[project](https://github.com/YiGuan-z/ktor-sample-Netty-chat.git)
+写得烂，大佬别打，主要是用用这些技术。

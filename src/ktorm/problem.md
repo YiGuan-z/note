@@ -145,7 +145,7 @@ fun <R : Any> Query.map(table: BaseTable<*>, r: KClass<R>): List<R> {
 fun <R : Any> Query.mapTo(
     constructor: KFunction<R>,
     table: BaseTable<*>
-): ArrayList<R> {
+): List<R> {
     val parameters = constructor.parameters
     //将构造器中存在的列映射为table中的Column
     val columns = parameters.map { param -> runCatching { table[param.name!!] }.getOrNull() }
