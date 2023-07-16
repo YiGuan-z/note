@@ -29,6 +29,7 @@
         <link rel="stylesheet" href="ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
 
     </head>
     <body>
@@ -175,7 +176,7 @@
                         <h1 id="note"><a class="header" href="#note">note</a></h1>
 <p>写一些自己在学习编程的一些感悟，毕竟看着怪高大上的，也方便自己来查找内容。</p>
 
-                        <div id="commento"></div>
+                        <div id="gitalk-container"></div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -219,6 +220,20 @@
         </script>
 
 
+        <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+        <script>
+            var gitalk = new Gitalk({
+                clientID: '27f9a9bf923e9b17c5c7',
+                clientSecret: '04d6ca3ca8c7a71b7574c6b15a71799f560ed918',
+                repo: 'note',
+                owner: 'YiGuan-z',
+                admin: ['YiGuan-z'],
+                id: location.pathname,      // Ensure uniqueness and length less than 50
+                distractionFreeMode: false  // Facebook-like distraction free mode
+            })
+            gitalk.render('gitalk-container')
+        </script>
+
 
         <script>
             window.playground_copyable = true;
@@ -234,7 +249,6 @@
         <script src="book.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="assets/commento.js"></script>
 
 
     </div>

@@ -47,6 +47,7 @@
         {{#each additional_css}}
         <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
         {{/each}}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
 
         {{#if mathjax_support}}
         <!-- MathJax -->
@@ -206,7 +207,7 @@
                 <div id="content" class="content">
                     <main>
                         {{{ content }}}
-                        <div id="commento"></div>
+                        <div id="gitalk-container"></div>
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
@@ -283,6 +284,20 @@
             }
         </script>
         {{/if}}
+
+        <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+        <script>
+            var gitalk = new Gitalk({
+                clientID: '27f9a9bf923e9b17c5c7',
+                clientSecret: '04d6ca3ca8c7a71b7574c6b15a71799f560ed918',
+                repo: 'note',
+                owner: 'YiGuan-z',
+                admin: ['YiGuan-z'],
+                id: location.pathname,      // Ensure uniqueness and length less than 50
+                distractionFreeMode: false  // Facebook-like distraction free mode
+            })
+            gitalk.render('gitalk-container')
+        </script>
 
         {{#if playground_line_numbers}}
         <script>
