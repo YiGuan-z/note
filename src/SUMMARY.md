@@ -55,13 +55,14 @@
   - [ktorm](ktorm/readme.md)
     - [使用ktorm开发过程中遇到的问题](ktorm/problem.md)
   - [flyway数据库版本控制](kotlin/flyway/readme.md)
+  - [编写一个简易定时器](kotlin/timer/readme.md)
 - [go语言]()
   - [go语言小技巧](goland/gotips.md)
 - [rust]()
   - [rust语言小技巧]()
 - [swift](swift/learn/readme.md)
 
-- [一些杂谈]()
+- [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
 
 ---

@@ -16,6 +16,7 @@ Commento提供了三种自托管逻辑，分别为使用二进制文件、Docker
 
 ```shell
 wget https://commento-release.s3.amazonaws.com/commento-linux-amd64-v1.4.0.tar.gz
+
 tar xvf commento-linux-amd64-v1.4.0.tar.gz -C /path/to/installation/
 ```
 

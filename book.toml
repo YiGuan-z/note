@@ -10,7 +10,7 @@ command = "mdbook-toc"
 renderer = ["html"]
 
 [output.html]
-default-theme = "navy"
+default-theme = "light"
 git-repository-url = "https://github.com/YiGuan-z/note"
 edit-url-template = "https://github.com/YiGuan-z/note/edit/main/{path}"
 # additional-js = ["assets/commento.js"]
