@@ -6,7 +6,7 @@ src = "src"
 title = "note"
 
 [preprocessor.toc]
-command = "./bin/darwin/mdbook-toc"
+command = "./bin/mdbook-toc"
 renderer = ["html"]
 
 [output.html]
