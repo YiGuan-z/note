@@ -1,6 +1,5 @@
 # kodein-di
 
-<!-- toc -->
 ---
 
 [kodein-di](https://kosi-libs.org/kodein/7.19/getting-started.html)是一个kotlin的依赖注入框架，它可以更方便的管理整个应用程序的代码依赖，与Spring不同的是，它是声明式的，通过[DSL语法](https://zhuanlan.zhihu.com/p/110757158)操作。

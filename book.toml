@@ -9,11 +9,19 @@ title = "note"
 command = "./bin/mdbook-toc"
 renderer = ["html"]
 
+[preprocessor.footnote]
+
+[preprocessor.admonish]
+command = "mdbook-admonish"
+assets_version = "2.0.1" # do not edit: managed by `mdbook-admonish install`
+
+
 [output.html]
 default-theme = "light"
 git-repository-url = "https://github.com/YiGuan-z/note"
 edit-url-template = "https://github.com/YiGuan-z/note/edit/main/{path}"
-# additional-js = ["assets/commento.js"]
+additional-css = ["./assets/css/style.css", "./assets/css/mdbook-admonish.css"]
+additional-js = ["./assets/sidebar.js"]
 
 [output.html.fold]
 enable = true

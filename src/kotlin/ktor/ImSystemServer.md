@@ -4,6 +4,13 @@
 
 这几个月把kotlin的代码写熟了，所以就打算编写一个即时通讯服务来练练手。
 
+发现一件事，通讯可以使用 MQTT来进行发送啊，那么我只需要提供登陆，好友列表查询，向列表发布即可，SQL可以删了，直接把数据放到redis中序列化，再配合MQTT来实现通讯。（正在学习swift-ui）
+
+SQL不要了，redis就行，多存点关系就好。
+
+留个地址怕忘记
+[emqx](https://www.emqx.io)
+
 - 用户功能
   - 单点登录
   - 私聊
@@ -63,3 +70,5 @@ A u B A={1,2,3} B={3,4,5} A u B = {1,2,3,4,5}
 
 [project](https://github.com/YiGuan-z/ktor-sample-Netty-chat.git)
 写得烂，大佬别打，主要是用用这些技术。
+
+[emqx](https://www.emqx.io)

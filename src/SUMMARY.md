@@ -62,6 +62,7 @@
   - [rust语言小技巧]()
 - [swift](swift/learn/readme.md)
   - [swift-ui](swift/learn/ui.md)
+  - [布局与控件](swift/learn/control.md)
 
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)

@@ -1,5 +1,3 @@
-<!-- toc -->
-
 # mdbook
 
 ## mdbook-toc
@@ -85,3 +83,37 @@ graph TB or graph TD: Top to Bottom
 graph BT: Bottom to Top
 graph LR: Left to Right
 graph RL: Right to Left
+
+## [mdBook-pagetoc](https://github.com/JorelAli/mdBook-pagetoc)
+
+用于给一篇文章添加右侧导航栏。
+
+## [代码执行](https://github.com/FauconFan/mdbook-cmdrun)
+
+可以在浏览器中执行代码。
+
+## [更漂亮的消息块](https://github.com/tommilligan/mdbook-admonish.git)
+
+```admonish
+Test
+```
+
+```admonish info
+Test
+```
+
+```admonish warning
+Test
+```
+
+```admonish danger
+Test
+```
+
+```admonish example
+Test
+```
+
+## [将book转化为知识库](https://github.com/out-of-cheese-error/gooseberry)
+
+## [PPT](https://github.com/FreeMasen/mdbook-presentation-preprocessor)
