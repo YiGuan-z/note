@@ -1,6 +1,6 @@
 mdbook-version = 0.4.32
 mdbook-toc-version = 0.12.0
-admonish-version = 2.0.1
+admonish-version = 1.10.0
 
 build:
 	mdbook build
