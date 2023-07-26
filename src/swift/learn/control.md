@@ -1,6 +1,8 @@
 # 布局与控件
 
-## Text
+## 组件
+
+### Text
 
 ```swift
 //.capitalized是大写选项卡
@@ -31,7 +33,7 @@ Text("hello,world".capitalized)
             .minimumScaleFactor(0.1)
 ```
 
-## Creating Shapes
+### Creating Shapes
 
 `.fill`和`.foregroundColor`的区别是前者为指定的形状填充颜色，后者会改变文本和模版渲染元素的颜色。
 
@@ -54,7 +56,7 @@ RoundedRectangle(cornerRadius: 10.0)
 
 将这些修饰符组合起来，可以获得一些非常好的效果。
 
-## Color
+### Color
 
 `Color.primary`会自动根据设备的显示模式(深色模式&浅色模式)来切换黑白。
 
@@ -62,7 +64,7 @@ RoundedRectangle(cornerRadius: 10.0)
 
 在`Assets.xcassets`中设置完颜色后，就可以在代码中使用这个颜色了，在构造Color的时候传入在`Assets.xcassets`中自定义颜色的名称即可使用。
 
-## Gradients
+### Gradients
 
 做设计的时候不要使用颜色太过于激烈的渐变
 
@@ -99,7 +101,7 @@ RoundedRectangle(cornerRadius: 25.0)
             .frame(width: 300,height: 200)
 ```
 
-## System Icon
+### System Icon
 
 可以使用apple设计资源网站中获取的SF symbols，里面可以检查并使用系统自带的一些图标。
 
@@ -123,7 +125,7 @@ RoundedRectangle(cornerRadius: 25.0)
             
 ```
 
-## Image
+### Image
 
 ```swift
         Image(systemName: "person.fill.badge.plus")
@@ -138,7 +140,7 @@ RoundedRectangle(cornerRadius: 25.0)
 //            .clipped()
 ```
 
-## Farme
+### Farme
 
 ```swift
 //        Text("Hello, World!")
@@ -161,7 +163,7 @@ RoundedRectangle(cornerRadius: 25.0)
             .background(Color.yellow)
 ```
 
-## Backgrounds and Overlays
+### Backgrounds and Overlays
 
 怎么说呢，非常的有组件化前端开发的感觉，可以让写TS的人没事来客串客串一下这些声明式布局，反正他们熟。
 
@@ -251,7 +253,7 @@ Image(systemName: "heart.fill")
             )
 ```
 
-## VStack,Hstack, and ZStack
+### VStack,Hstack, and ZStack
 
 VStacks -> Vertical
 
@@ -322,7 +324,7 @@ ZStacks -> zIndex (back to front)
         }
 ```
 
-## padding
+### padding
 
 ```swift
 VStack(alignment:.leading) {
@@ -344,7 +346,7 @@ VStack(alignment:.leading) {
 .padding(.horizontal,10)
 ```
 
-## Spacer
+### Spacer
 
 spacer会对内容进行隔离操作，它会自动调整大小，并填满一个盒子。
 
@@ -401,7 +403,7 @@ VStack {
         Spacer()
 ```
 
-## inits and enums
+### inits and enums
 
 这一集主要讲述了如何定义多个地方共同使用的变量，并且自定义一个结构体的构造函数，算是编程基础。swift会为所有未赋值的变量默认生成一个构造器。
 
@@ -477,7 +479,7 @@ struct InitializerBootcamp: View {
 
 ```
 
-## ForEach and loops
+### ForEach and loops
 
 `ForEach`语句在想要重复ui元素的时候就可以使用它们
 
@@ -506,7 +508,7 @@ var body: some View {
     }
 ```
 
-## ScrollView
+### ScrollView
 
 `ScrollView`可以对ui进行滚动，避免数据显示被截断，将其完整的展示出来。
 
@@ -535,7 +537,7 @@ ScrollView{
         }
 ```
 
-## LazyVGrid
+### LazyVGrid
 
 讲述了如何编写适应性网格布局，swiftui中的所有网格都是惰性的。
 
@@ -619,7 +621,7 @@ nice，开始熟练起来了，是个好兆头。
     }
 ```
 
-## safeArea
+### safeArea
 
 `.ignoresSafeArea()`和`.edgeslgnoringSafeArea()`
 
@@ -715,7 +717,7 @@ ScrollView{
 
 只需要修改一处，让背景色忽略安全区域。
 
-## Button
+### Button
 
 按钮这个东西，很多地方都有，我最熟悉的就是html上面的按钮标签了，突然想知道谁是最早的声明式UI，找个时间去查查。
 
@@ -826,7 +828,7 @@ Button(action: {
 })
 ```
 
-## @State
+### @State
 
 还记得`struct`实例一般情况下是无法被修改的吗？不记得也没关系，搜引擎上搜索一下`mutating`{{footnote:用于修改值类型或枚举类型的内部属性方法修饰符}}关键字即可。
 
@@ -868,7 +870,7 @@ var body: some View {
 
 按着UI的头并告诉他，被@State标注了的变量发生改变后，给我重新工作。
 
-## Extract Functions & Views
+### Extract Functions & Views
 
 这一章节很简单，教你如何对方法进行封装📦，将可复用的代码片段封装为一个方法，对于视图也是同理。
 
@@ -930,7 +932,7 @@ func ignoreSafeAreaView(color:Color,alignment:Alignment = .center,@ViewBuilder a
 }
 ```
 
-## Extract Subviews
+### Extract Subviews
 
 刚才我们查看了如何提取方法，那么我们现在来提取视图组件吧。
 
@@ -977,7 +979,7 @@ struct CardItem: View {
 }
 ```
 
-## @Binding{{footnote:意为绑定，可以将父视图的变量传递给子视图}}
+### @Binding{{footnote:意为绑定，可以将父视图的变量传递给子视图}}
 
 ```admonish
 这是一个普通的页面背景切换代码
@@ -1058,7 +1060,7 @@ var body: some View {
 }
 ```
 
-## Conditional Statements
+### Conditional Statements
 
 有`if else`和`switch`两种条件选择语句{{footnote:这两种语句在许多编程语言中都广泛存在，有的switch可能叫when或match，switch语句中也分两个派别，一个是古典的hashCode派，一个是现代的模式匹配派，不用担心什么性能问题，如果这种语句都有问题的话，要么是该语言使用难度极大，要么就是写的代码太💩了}}。
 
@@ -1122,4 +1124,207 @@ var body: some View {
 }
 ```
 
+### Ternary Operators{{footnote:三元运算符，三目运算符}}
 
+```admonish warning
+三元运算符是个好东西，但是请不要写一大坨，它通常用来设置一个默认值，或者某个变量为空后返个异常语句出去。
+
+对于布尔值，它不需要写比较条件，如果为`true`就会返回`:`前面的结果，如果为`false`就会返回`:`后面的结果
+```
+
+还是使用刚才的`if else`来举例:
+如果有许多地方都是一样的，只有一个地方刚好不同，那么我们就可以使用三元表达式来进行简化`if else`
+
+简化前：
+
+```swift
+if showCircle{
+    Circle()
+        .stroke(lineWidth: 1)
+        .fill(Color.blue)
+        .shadow(color: .black,radius: 10)
+        .frame(width: 100,height: 100)
+}else{
+    Circle()
+        .stroke(lineWidth: 1)
+        .fill(Color.red)
+        .shadow(color: .black,radius: 10)
+        .frame(width: 100,height: 100)
+}
+```
+
+简化后：
+
+```swift
+Circle()
+    .stroke(lineWidth: 1)
+    .fill(showCircle ? Color.blue:Color.red)
+    .shadow(color: .black,radius: 10)
+    .frame(width: 100,height: 100)
+```
+
+## 动画
+
+### .animation() & withAnimation()
+
+动画是精髓，看看隔壁PPT，动画上去了效果都不一样😊。
+
+没有动画，颜色切换太突兀。
+
+```swift
+@State var isAnimated:Bool = false
+
+var body: some View {
+    VStack{
+        Button("check me"){
+            isAnimated.toggle()
+        }
+        Spacer()
+        RoundedRectangle(cornerRadius: 25.0)
+            .fill(isAnimated ? Color.red : Color.blue)
+            .frame(width: 100,height: 100)
+        Spacer()
+    }
+}
+```
+
+现在，我们使用`withAnimation`来为我们的Rectangle加上动画。
+
+```swift
+@State var isAnimated:Bool = false
+
+var body: some View {
+    VStack{
+        Button("check me"){
+            withAnimation(.default){
+                isAnimated.toggle()
+            }
+        }
+        Spacer()
+        RoundedRectangle(cornerRadius: 25.0)
+            .fill(isAnimated ? Color.red : Color.blue)
+            .frame(width: 100,height: 100)
+        Spacer()
+    }
+}
+```
+
+```admonish
+该方法将会为所有受到`isAnimated`变量影响的内容加上动画。
+```
+
+现在，我们为`cornerRadius`修改值。
+
+```swift
+@State var isAnimated:Bool = false
+
+var body: some View {
+    VStack{
+        Button("check me"){
+            withAnimation(.default){
+                isAnimated.toggle()
+            }
+        }
+        Spacer()
+        RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
+            .fill(isAnimated ? Color.red : Color.blue)
+            .frame(width: 100,height: 100)
+        Spacer()
+    }
+}
+```
+
+点击check me看看，一个圆角的框框伴随着动画变为了一个真正的圆形，`withAnimation`会为所有受到影响的ui添加动画。
+
+这次我们修改宽高。
+
+```swift
+@State var isAnimated:Bool = false
+
+var body: some View {
+    VStack{
+        Button("check me"){
+            withAnimation(.default){
+                isAnimated.toggle()
+            }
+        }
+        Spacer()
+        RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
+            .fill(isAnimated ? Color.red : Color.blue)
+            .frame(width: isAnimated ? 100 :200,height: isAnimated ? 100: 200)
+        Spacer()
+    }
+}
+```
+
+还可以修改它的位置。
+
+```swift
+@State var isAnimated:Bool = false
+
+var body: some View {
+    VStack{
+        Button("check me"){
+            withAnimation(.default){
+                isAnimated.toggle()
+            }
+        }
+        Spacer()
+        RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
+            .fill(isAnimated ? Color.red : Color.blue)
+            .frame(width: isAnimated ? 100 :200,height: isAnimated ? 100: 200)
+            .offset(y:isAnimated ? 200:0)
+        Spacer()
+    }
+}
+```
+
+还能够修改动画触发速度。
+
+```swift
+withAnimation(Animation.default.delay(0.5)){
+    isAnimated.toggle()
+}
+```
+
+重复动画
+
+```admonish info
+`autoreverses` 参数如果为true可能看着会跳了大约一半的动画，但是，回归动画也算一次动画。
+```
+
+```swift
+VStack{
+    Button("check me"){
+        withAnimation(
+            Animation
+                .default
+                .repeatCount(5, autoreverses: true)
+        ){
+            isAnimated.toggle()
+        }
+    }
+    Spacer()
+    RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
+        .fill(isAnimated ? Color.red : Color.blue)
+        .frame(width: isAnimated ? 100 :200,height: isAnimated ? 100: 200)
+        .rotationEffect(Angle(degrees: isAnimated ? 360 : 0))
+        .offset(y:isAnimated ? 200:0)
+    Spacer()
+}
+```
+
+也可以只让`Rectangle`受到动画影响，为`Rectangle`添加`.animation`修饰符即可。
+
+其中的value参数表示需要监视哪个值，是个触发器。
+
+```swift
+RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
+                .fill(isAnimated ? Color.red : Color.blue)
+                .frame(width: isAnimated ? 100 :200,height: isAnimated ? 100: 200)
+                .rotationEffect(Angle(degrees: isAnimated ? 360 : 0))
+                .offset(y:isAnimated ? 200:0)
+                .animation(Animation
+                    .default
+                    .repeatCount(5, autoreverses: true), value:isAnimated)
+```

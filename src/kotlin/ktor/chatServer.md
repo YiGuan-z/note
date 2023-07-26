@@ -3,7 +3,7 @@
 > 本文讲是由官方示例演变而来，为防止官方变动，我fork了一份到我的账号下[仓库链接🔗](https://github.com/YiGuan-z/ktor-samples.git)
 
 官方分了三个根出来，我就简便一点，只对backendMain进行说明，使用[wscat](../../util/wscat.md)对其进行测试。
-<!-- toc -->
+
 ## 配置ktor启动
 
 在主方法中配置嵌入式服务器

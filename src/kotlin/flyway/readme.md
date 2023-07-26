@@ -31,11 +31,14 @@ FlyWay 将SQL脚本分为三种：
 - Repeatable可重复执行，当Flyway检查到R类型的脚本校验和有变动的时候，FlyWay就会重新运行该脚本，它总是在V执行结束后开始执行。
 - Undo用于撤销具有相同版本化迁移带来的影响。不推荐使用，建议使用V模式来解决。并且U是商业功能，社区版本并不提供。
 
-⚠️！文件系统可能大小写不敏感，但是FlyWay大小写敏感。
+```admonish warning
+文件系统可能大小写不敏感，但是FlyWay大小写敏感。
+```
 
 ![命名规则](./image/flyway_naming.png)
 
 ### 参考链接
 
 [flyway-roll-back](https://www.baeldung.com/flyway-roll-back)
+
 [flyway：文件命名很重要](https://www.red-gate.com/blog/database-devops/flyway-naming-patterns-matter)
