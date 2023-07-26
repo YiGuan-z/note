@@ -1,8 +1,10 @@
 # swift-ui
 
-> 基于B站视频[iOS&MacOS开发 SwiftUI 62集入门教程（中英字幕）-哔哩哔哩](https://b23.tv/RlXOohu)编写的笔记。
->
-> 本人使用的Xcode-15-Beta.4进行学习。
+```admonish
+基于B站视频[iOS&MacOS开发 SwiftUI 62集入门教程（中英字幕）-哔哩哔哩](https://b23.tv/RlXOohu)编写的笔记。
+
+本人使用的Xcode-15-Beta.4进行学习。~~我当时一定是🧠抽风了才升的船新版本Mac OS。~~
+```
 
 ## 一些杂七杂八的资源
 

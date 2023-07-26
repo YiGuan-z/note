@@ -625,7 +625,9 @@ nice，开始熟练起来了，是个好兆头。
 
 保持在安全区域内编码，以及了解如何使用不安全区域进行编码。
 
+```admonish
 参考[Apple人机交互指南](https://developer.apple.com/cn/design/human-interface-guidelines/layout)中的内容布局章节。
+```
 
 忽略安全区域一般适用于背景之类的组件，例如：
 
@@ -798,19 +800,30 @@ Button(action: {
 })
 
 Button(action: {
-            self.title = "你再点！！！"
-        }, label: {
-            Text("点我")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.gray)
-                .padding()
-                .padding(.horizontal,10)
-                .background(
-                    Capsule()
-                        .stroke(Color.gray,lineWidth: 2)
-                )
-        })
+    self.title = "你再点！！！"
+}, label: {
+    Text("点我")
+        .font(.headline)
+        .fontWeight(.semibold)
+        .foregroundColor(.gray)
+        .padding()
+        .padding(.horizontal,10)
+        .background(
+            Capsule()
+                .stroke(Color.gray,lineWidth: 2)
+        )
+})
+
+Button(action: {
+    self.title = "没完了是吧！"
+}, label: {
+    Text("press me".uppercased())
+        .font(.headline)
+        .foregroundColor(.white)
+        .padding()
+        .background(Color.black)
+        .cornerRadius(10)
+})
 ```
 
 ## @State
@@ -861,17 +874,44 @@ var body: some View {
 
 在不失安全性的前提下做到复用性和灵活性。友人A：这小子又在装。
 
+```admonish
 提一嘴，`#Preview`{{footnote:预览宏}}是Xcode15的全新功能，不需要写在一个结构体里面了。
 
 [链接](https://www.appcoda.com/swiftui-preview-macro/)
+```
 
 ```swift
 struct ExtractFunctionBootcamp: View {
+    
+   @State var backgroundColor = Color.yellow
+    
     var body: some View {
-        ignoreSafeAreaView(color: Color.red,alignment: .top){
-            Text("Safe")
-                
+        ignoreSafeAreaView(color: backgroundColor,alignment: .center){
+            
+            contentLayout
+            
         }
+    }
+    var contentLayout:some View{
+        VStack{
+            Text("Safe")
+                .font(.largeTitle)
+            
+            Button(action: {
+                buttonAction()
+            }, label: {
+                Text("press me".uppercased())
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.black)
+                    .cornerRadius(10)
+            })
+            
+        }
+    }
+    private func buttonAction(){
+        self.backgroundColor = Color.red
     }
 }
 
@@ -883,8 +923,203 @@ func ignoreSafeAreaView(color:Color,alignment:Alignment = .center,@ViewBuilder a
     }
 }
 
+
+
 #Preview {
     ExtractFunctionBootcamp()
 }
-
 ```
+
+## Extract Subviews
+
+刚才我们查看了如何提取方法，那么我们现在来提取视图组件吧。
+
+```swift
+struct ExtractSubviewBootcamp: View {
+    var body: some View {
+        ignoreSafeAreaView(color: .green, action:{
+            itemLayout
+        })
+    }
+    
+    var itemLayout:some View{
+        HStack{
+            CardItem(title: "Apples", count: 5, backgroundColor: .red)
+            CardItem(title: "Banana", count: 5, backgroundColor: .yellow)
+        }
+    }
+}
+
+#Preview {
+    ExtractSubviewBootcamp()
+}
+
+struct CardItem: View {
+    
+    let title:String
+    @State var count:Int
+    let backgroundColor:Color
+    
+    var body: some View {
+        
+            Button(action: {
+                count += 1
+            }, label: {
+                VStack{
+                    Text("\(count)")
+                    Text(title)
+                }
+                .padding()
+                .background(backgroundColor)
+                .cornerRadius(10)
+            })
+    }
+}
+```
+
+## @Binding{{footnote:意为绑定，可以将父视图的变量传递给子视图}}
+
+```admonish
+这是一个普通的页面背景切换代码
+```
+
+```swift
+@State var backgroundColor = Color.red
+
+var body: some View {
+    ignoreSafeAreaView(color: backgroundColor, action: {
+        Button(action: {
+            backgroundColor = .blue
+        }, label: {
+            Text("Button")
+                .foregroundColor(.white)
+                .padding()
+                .padding(.horizontal)
+                .background(Color.blue)
+                .cornerRadius(10)
+        })
+    })
+}
+```
+
+这时候我们尝试把`Button`组件抽取出来，但是会导致`backgroundColor`无法传递。
+
+```swift
+struct ExtractedView: View {
+    var body: some View {
+        Button(action: {
+            backgroundColor = .blue
+        }, label: {
+            Text("Button")
+                .foregroundColor(.white)
+                .padding()
+                .padding(.horizontal)
+                .background(Color.blue)
+                .cornerRadius(10)
+        })
+    }
+}
+```
+
+```admonish
+我们想要在子组件中访问并能修改父组件的实例就可以使用`@Binding`来对变量进行声明。
+```
+
+```swift
+struct ButtionView: View {
+    @Binding var backgroundColor:Color
+    
+    var body: some View {
+        Button(action: {
+            backgroundColor = .blue
+        }, label: {
+            Text("Button")
+                .foregroundColor(.white)
+                .padding()
+                .padding(.horizontal)
+                .background(Color.blue)
+                .cornerRadius(10)
+        })
+    }
+}
+```
+
+在父视图向子视图传递绑定变量的时候需要使用`$`符号加上变量名进行传递。
+
+```swift
+@State var backgroundColor = Color.red
+
+var body: some View {
+    ignoreSafeAreaView(color: backgroundColor, action: {
+        
+        ButtionView(backgroundColor: $backgroundColor)
+        
+    })
+}
+```
+
+## Conditional Statements
+
+有`if else`和`switch`两种条件选择语句{{footnote:这两种语句在许多编程语言中都广泛存在，有的switch可能叫when或match，switch语句中也分两个派别，一个是古典的hashCode派，一个是现代的模式匹配派，不用担心什么性能问题，如果这种语句都有问题的话，要么是该语言使用难度极大，要么就是写的代码太💩了}}。
+
+`if else` 版本：
+
+```swift
+    
+@State var showCircle:Bool = false
+
+var body: some View {
+    VStack{
+        Button("Circle Button:\(showCircle.description)"){
+            showCircle.toggle()
+        }
+        if showCircle {
+            Circle()
+                .stroke(lineWidth: 1)
+                .shadow(color: .black,radius: 10)
+                .frame(width: 100,height: 100)
+            
+        }else{
+            Rectangle()
+                .stroke(lineWidth: 2)
+                .shadow(radius: 10)
+                .frame(width: 100,height: 100)
+        }
+        Spacer()
+    }
+    .animation(.default)
+    
+}
+```
+
+`switch`版本：
+
+```swift
+
+@State var showCircle:Bool = false
+
+var body: some View {
+    VStack{
+        Button("Circle Button:\(showCircle.description)"){
+            showCircle.toggle()
+        }
+        switch showCircle{
+        case true:
+            Circle()
+                .stroke(lineWidth: 1)
+                .shadow(color: .black,radius: 10)
+                .frame(width: 100,height: 100)
+        case false:
+            Rectangle()
+                .stroke(lineWidth: 2)
+                .shadow(radius: 10)
+                .frame(width: 100,height: 100)
+        }
+        Spacer()
+    }
+    .animation(.default)
+    
+}
+```
+
+

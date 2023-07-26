@@ -12,3 +12,4 @@ prod:
 	cargo install --version $(mdbook-version) mdbook --force
 	cargo install --version $(mdbook-toc-version) mdbook-toc --force
 	cargo install --version $(admonish-version) mdbook-admonish --force
+	cargo install mdbook-footnote

@@ -57,15 +57,15 @@ Unable to make field private final byte[] java.lang.String.value accessible: mod
 
 脑海里闪过一丝不对劲，将这段报错内容发了出去，很快我就得到了群友使用newBing的回答。
 
->这个错误通常出现在尝试使用反射访问模块化JDK（Java9及其以上版本）中的某些私有类成员时。在模块化JDK中，模块之间的访问是受限的，除非模块显式地打开了对其它模块的访问权限。在这种情况之下，`java.base`模块没有打开`java.lang`包的访问权限，因此无法反射访问`java.lang.String.value`字段。
->
->要解决这个问题，可以添加JVM参数 `--add-opens`来打开模块之间的访问权限。例如，可以使用一下命令来运行程序：
->
->`java --add-opens java.base/java.lang=ALL-UNNAMED -jar myprogram.jar`
->
->这将允许未命名模块访问`java.base`模块中`java.lang`包的所有成员。
->
->另外，也可以考虑使用更低版本的jdk来运行程序，因为Java8及一下版本中不存在模块化限制。
+```admonish info
+这个错误通常出现在尝试使用反射访问模块化JDK（Java9及其以上版本）中的某些私有类成员时。在模块化JDK中，模块之间的访问是受限的，除非模块显式地打开了对其它模块的访问权限。在这种情况之下，`java.base`模块没有打开`java.lang`包的访问权限，因此无法反射访问`java.lang.String.value`字段。
+
+要解决这个问题，可以添加JVM参数 `--add-opens`来打开模块之间的访问权限。例如，可以使用以下命令来运行程序：
+`java --add-opens java.base/java.lang=ALL-UNNAMED -jar myprogram.jar`
+
+这将允许未命名模块访问`java.base`模块中`java.lang`包的所有成员。
+另外，也可以考虑使用更低版本的jdk来运行程序，因为Java8及一下版本中不存在模块化限制。
+```
 
 看完这个回答，我就陷入了思索，因为我没有Java8，很快就选择了Java17（之前的报错为Java20），还是报错，切换到Java11，没有报错，但是有警告⚠️。
 
@@ -93,6 +93,7 @@ fun main(){
 }
 ```
 
+```admonish
 以下是运行情况
 
 | jdk11 | jdk17 | jdk20 |
@@ -100,6 +101,7 @@ fun main(){
 |   ⚠️   |   ❌   |   ❌   |
 
 unsafe在高版本jdk上被已限制。
+```
 
 ## 总结
 
