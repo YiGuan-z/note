@@ -49,6 +49,10 @@
 
 在swift中，分为class和struct两种数据类型，class是引用类型，struct是值类型。
 
+#### 突变方法
+
+`mutating`关键字可以让struct或enum内部保存的值发生改变，这两种类型一般不变，但特殊情况就需要标注一下。
+
 ### init&deinit
 
 在swift中，`init`是构造函数，这点和kotlin的init是不同的，swift还有一个特殊的函数:`deinit`，用于对象的析构它将在这个对象被回收的时候执行。

@@ -84,15 +84,23 @@ graph BT: Bottom to Top
 graph LR: Left to Right
 graph RL: Right to Left
 
-## [mdBook-pagetoc](https://github.com/JorelAli/mdBook-pagetoc)
+## mdBook-pagetoc
+
+[mdbook-pagetoc](https://github.com/JorelAli/mdBook-pagetoc)
 
 用于给一篇文章添加右侧导航栏。
 
-## [代码执行](https://github.com/FauconFan/mdbook-cmdrun)
+## 代码执行
+
+[mdbook-cmdrun](https://github.com/FauconFan/mdbook-cmdrun)
 
 可以在浏览器中执行代码。
 
-## [更漂亮的消息块](https://github.com/tommilligan/mdbook-admonish.git)
+## 更漂亮的消息块
+
+好看的消息块
+
+[mdbook-admoish](https://github.com/tommilligan/mdbook-admonish.git)
 
 ```admonish
 Test
@@ -114,6 +122,12 @@ Test
 Test
 ```
 
-## [将book转化为知识库](https://github.com/out-of-cheese-error/gooseberry)
+## 将book转化为知识库
 
-## [PPT](https://github.com/FreeMasen/mdbook-presentation-preprocessor)
+将book转化为知识库
+[gooseberry](https://github.com/out-of-cheese-error/gooseberry)
+
+## PPT
+
+据说是ppt🤔，不过我现在暂时没有用它的打算。
+[mdbook-presentation-preprocessor](https://github.com/FreeMasen/mdbook-presentation-preprocessor)

@@ -1328,3 +1328,265 @@ RoundedRectangle(cornerRadius: isAnimated ? 25 : 50)
                     .default
                     .repeatCount(5, autoreverses: true), value:isAnimated)
 ```
+
+### Animation Curves
+
+```admonish info
+动画曲线是一个很复杂的东西，我们主要看五个动画。
+
+- bouncy {{footnote:弹性动画}}
+    - 非常有弹性
+- linear {{footnote:缓性动画}}
+    - 从开始到结束的时间相同
+- easeIn {{footnote:缓入动画}}
+    - 慢入快出
+- easeInOut {{footnote:缓入缓出}}
+    - 慢快慢 慢速启动，然后加速，到达终点减速
+- easeOut {{footnote:缓出}}
+    - 快入慢出
+```
+
+```swift
+@State var isAnimation:Bool = false
+    var body: some View {
+        VStack{
+            Button("🤔"){
+                isAnimation.toggle()
+            }
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.bouncy)
+                .overlay(
+                    Text("弹性动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.linear)
+                .overlay(
+                    Text("线性动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeIn)
+                .overlay(
+                    Text("缓入动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeInOut)
+                .overlay(
+                    Text("缓入缓出动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeOut)
+                .overlay(
+                    Text("缓出动画")
+                        .foregroundColor(.white)
+                )
+        }
+    }
+```
+
+他们的动画时间如果没有规定，那么都会是相同的。
+
+为了论证这一点，我们可以使用带`duration`参数的方法来设置时间。
+
+```swift
+    @State var isAnimation:Bool = false
+    let timeing = 10
+    var body: some View {
+        VStack{
+            Button("🤔"){
+                isAnimation.toggle()
+            }
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.bouncy(duration: TimeInterval(timeing)))
+                .overlay(
+                    Text("弹性动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.linear(duration: TimeInterval(timeing)))
+                .overlay(
+                    Text("线性动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeIn(duration: TimeInterval(timeing)))
+                .overlay(
+                    Text("缓入动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeInOut(duration: TimeInterval(timeing)))
+                .overlay(
+                    Text("缓入缓出动画")
+                        .foregroundColor(.white)
+                )
+            
+            RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.easeOut(duration: TimeInterval(timeing)))
+                .overlay(
+                    Text("缓出动画")
+                        .foregroundColor(.white)
+                )
+        }
+    }
+```
+
+运行这部分代码，观察动画。
+
+现在，我们来试试自定义动画。
+
+```admonish info
+`response`：弹簧的刚度，以秒为单位的时间。值为0则表示无限刚性的弹簧。
+
+`dampingFraction`：动画的阻尼。
+
+`blendDuration`：以秒为单位的时间，用于在弹簧之间插值响应值的变化。用来控制弹簧在响应变化时的过度效果。例如，如果希望在弹簧动画在响应值的时候更加平滑，就可以增加它的值。
+
+```
+
+```swift
+RoundedRectangle(cornerRadius: 25.0)
+                .frame(width: isAnimation ? 350:50, height: 100)
+                .animation(.spring(
+                    response: 1,
+                    dampingFraction: 0.7,
+                    blendDuration: 1.0
+                    )
+                )
+                .overlay(
+                    Text("自定义动画")
+                        .foregroundColor(.white)
+                )
+```
+
+### .transition{{footnote:过渡动画}}
+
+```admonish info
+`transition`决定了某个View怎么插入到当前页面中，或者如何从当前页面中移除。
+
+`transition`需要和动画一起使用，通常配合`.opacity`过度视图透明度，或者使用`.slide`来控制视图的位置。
+
+也可以使用`.astnnetruc`过度来为插入和移除操作指定不同的过渡效果，或者使用`.combined`方法来组合多个过渡效果。
+
+|修饰符|中文|动画描述|
+|:---:|:---:|:---:|
+|slide|幻灯片|左进右出|
+|move|移动|自定义|
+|opacity|不透明度|淡入淡出|
+|scale|比例尺|从中间放大|
+|asymmetric|不对称|自定义出入动画|
+```
+
+我们将会为这一段代码的方形盒子添加过渡
+
+```swift
+@State var showView:Bool = false
+
+var body: some View {
+    ZStack(alignment:.bottom){
+        VStack{
+            Button("🤔"){
+                showView.toggle()
+            }
+            Spacer()
+        }
+        RoundedRectangle(cornerRadius: 30)
+            .frame(height: UIScreen.main.bounds.height * 0.5)
+            .opacity(showView ? 1.0 : 0.0)
+            .animation(.easeInOut)
+            
+    }
+    .ignoresSafeArea(edges: .bottom)
+    
+}
+```
+
+```admonish info
+由于我们之前隐藏盒子是通过不透明度来实现的。
+
+现在我们可以切换为过渡动画。
+```
+
+```swift
+var body: some View {
+        ZStack(alignment:.bottom){
+            VStack{
+                Button("🤔"){
+                    showView.toggle()
+                }
+                Spacer()
+            }
+            
+            if showView{
+                RoundedRectangle(cornerRadius: 30)
+                    .frame(height: UIScreen.main.bounds.height * 0.5)
+                    .transition(.slide)
+                    .animation(.easeInOut)
+            }
+                
+        }
+        .ignoresSafeArea(edges: .bottom)
+```
+
+现在我们可以使用更多的过渡动画
+
+```swift
+//从下方出现消失
+//这个好看🥰
+RoundedRectangle(cornerRadius: 30)
+                .frame(height: UIScreen.main.bounds.height * 0.5)
+                .transition(.move(edge: .bottom))
+                .animation(.spring)
+```
+
+```admonish warning
+直接使用`opactiy`并在下面添加动画选项会导致过渡动画不可用，
+
+be like:
+
+    ```swift
+    RoundedRectangle(cornerRadius: 30)
+                        .frame(height: UIScreen.main.bounds.height * 0.5)
+                        .transition(.opacity)
+                        .animation(.spring)
+
+    ```
+
+```
+
+解决办法是：
+
+```swift
+RoundedRectangle(cornerRadius: 30)
+                    .frame(height: UIScreen.main.bounds.height * 0.5)
+                    .transition(.opacity.animation(.spring))
+```
+
+很神奇的bug，可能是因为swift-ui有点新，导致在构建动画模型的时候没有将内容构建进去，这只是个推断，因为看上去swift跟js一样，我完全不知道发生了什么。
+只能猜测做到一半突然发现像下面这样写更合理吧。
+
+```swift
+.transition(.asymmetric(insertion: .slide.animation(.bouncy), removal: .scale.animation(.easeIn)))
+```
