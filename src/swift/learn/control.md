@@ -1168,6 +1168,492 @@ Circle()
     .frame(width: 100,height: 100)
 ```
 
+### NavigationView & NavigationLink
+
+>ChengCY: 这个我知道，在前端里面，基本上都有，想必这里讲的是前端里面的路由了吧。
+>
+>ChengCY: 也许，大概🤔，没看我也不知道。
+
+构建一个`NavitaionView`页面
+
+```swift
+struct NavigationViewBootcamp: View {
+    var body: some View {
+            NavigationView(content: {
+                ScrollView{
+                    NavigationLink(destination: NavSecondScreen()) {
+                        Text("Navigate")
+                    }
+                    .navigationTitle("Box")
+                    .navigationBarTitleDisplayMode(.automatic)
+                    
+                }
+            })   
+        }
+}
+struct NavSecondScreen :View {
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            NavigationLink(destination: ButtonBootcamp(), label: {
+                Text("点我入button")
+            })
+        })
+        .navigationTitle("Hello")
+    }
+}
+```
+
+>ChengCY: 放心了，和前端没有什么差别。
+
+~~~admonish example title="没有回退界面的目标视图"
+我们将在这个视图中回退到导航视图，但是没有了回退按钮，怎么办呢？
+
+我们可以很好的利用前面所使用的[@Environment](#sheet)里面注入的`.\presentationMode`来对没有回退的页面进行回退。
+
+```swift
+struct NavSecondScreen :View {
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            NavigationLink(destination: ButtonBootcamp(), label: {
+                Text("点我入button")
+            })
+        })
+        .navigationTitle("Hello")
+        .navigationBarBackButtonHidden()
+    }
+}
+```
+~~~
+
+~~~admonish example title="自定义视图的回退按钮"
+
+```swift
+struct NavSecondScreen :View {
+    
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            VStack{
+                NavigationLink(destination: ButtonBootcamp(), label: {
+                    Text("点我入button")
+                })
+                
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }, label: {
+                  Text("点我出去")
+                })
+            }
+        })
+        .navigationTitle("Hello")
+        .navigationBarBackButtonHidden()
+    }
+}
+```
+~~~
+
+接下来，我们可以自定义导航栏上的按钮
+
+~~~admonish example title="使用`navigationBarItems`API对导航栏上的按钮自定义"
+
+```swift
+var body: some View {
+        NavigationView(content: {
+            ScrollView{
+                NavigationLink(destination: NavSecondScreen()) {
+                    Text("Navigate")
+                }
+                .navigationTitle("Box")
+                .navigationBarTitleDisplayMode(.automatic)
+                .navigationBarItems(
+                    leading: Image(systemName: "person.fill"),
+                                    trailing: Image(systemName: "gear")
+                )
+                
+            }
+        })
+}
+```
+~~~
+
+再给按钮加上一点功能
+
+```swift
+var body: some View {
+        NavigationView(content: {
+            ScrollView{
+                NavigationLink(destination: NavSecondScreen()) {
+                    Text("Navigate")
+                }
+                .navigationTitle("Box")
+                .navigationBarTitleDisplayMode(.automatic)
+                .navigationBarItems(
+                    leading: NavigationLink(destination: {
+                        //这里可以放入一些自己之前写的组件
+                        AnimationCurves()
+                    }, label: {
+                        Image(systemName: "person.fill")
+                    }),
+                    trailing: NavigationLink(destination: {
+                        ImageBootcamp()
+                    }, label: {
+                        Image(systemName: "gear")
+                    })
+                )
+                
+            }
+        })
+    }
+```
+
+### List
+
+在swift-ui中，`List`不是那个数据集合，而是一个容器视图，它用于展示列表数据。
+
+```swift
+    @State var items :[String] = [
+        "apple","orange","banana"
+    ]
+    var body: some View {
+        List{
+            Section(header:Text("Fruit")) {
+                ForEach(items,id: \.self){ fruit in
+                    Text(fruit)
+                }
+            }
+        }
+    }
+```
+
+可以对List的主题样式进行修改。
+
+```swift
+List{
+    Section(
+        header:Text("Fruit")
+    ) {
+        ForEach(fruits,id: \.self){ fruit in
+            Text(fruit)
+        }
+        .onDelete(perform: delete)
+        .onMove(perform: move)
+    }
+}
+.listStyle(GroupedListStyle())
+.navigationTitle("Grocery list")
+.navigationBarItems(
+    leading: EditButton(),
+    trailing: addButton
+)
+
+```
+
+~~~admonish info title="可进行的操作"
+可以对列表数据进行Add{{footnote:添加}},edit{{footnote:编辑}},move{{footnote:移动}},delete{{footnote:删除}}操作。
+
+这些操作通常都使用`on`开头，例如删除是`onDelete`
+
+~~~
+
+#### delete操作
+
+为列表添加`delete`操作
+
+```swift
+List{
+    Section(header:Text("Fruit")) {
+        ForEach(items,id: \.self){ fruit in
+            Text(fruit)
+        }.onDelete(perform: { indexSet in
+            items.remove(atOffsets: indexSet)
+        })
+    }
+}
+```
+
+通常而言，删除逻辑不应该和页面逻辑混合在一起，那会非常的难以维护，我们将删除操作抽象为一个方法 like this
+
+```swift
+func delete(index:IndexSet)  {
+        fruits.remove(atOffsets: index)
+}
+```
+
+方法编写完毕该如何使用呢？很简单，根据规则，我们可以为`onDelete`传递一个方法名即可 like this
+
+```swift
+.onDelete(perform: delete)
+```
+
+```admonish info title="require"
+这是关于方法引用的知识，可以看看我的关于lambda表达式的文章。~~虽然是Java版本，但是逻辑基本上在所有语言中都是共通的~~ [传送门](../../java/lambda/lambda.md)
+
+还是不明白的话就当它是一个简化规则吧。
+```
+
+#### edit操作
+
+为列表添加编辑按钮。
+
+```swift
+var body: some View {
+    NavigationView{
+        List{
+            Section(header:Text("Fruit")) {
+                ForEach(fruits,id: \.self){ fruit in
+                    Text(fruit)
+                }
+                .onDelete(perform: delete)
+            }
+        }
+        .navigationTitle("Grocery list")
+        .navigationBarItems(leading: EditButton())
+    }
+    
+}
+```
+
+#### move操作
+
+为列表添加移动操作
+
+```swift
+func move(from:IndexSet,to:Int){
+    fruits.move(fromOffsets: from, toOffset: to)
+}
+```
+
+同样将该函数交给`onMove`
+
+```swift
+.onMove(perform: move)
+```
+
+#### Add操作
+
+添加add操作
+
+写一个button并放置在导航栏右边
+
+```swift
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: Button("Add", action: {
+                    fruits.append("Pineapple")
+                })
+            )
+```
+
+根据之前的方法引用规则，我们可以把逻辑提取出来。
+
+```swift
+func add(){
+        fruits.append("pineapple")
+}
+```
+
+并修改`navigationBarItems`
+
+```swift
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: Button("Add", action: add)
+            )
+```
+
+我们要让主页面逻辑尽可能简，就需要将其它页面逻辑抽出去。
+
+```swift
+var addButton:some View{
+        Button("Add", action: add)
+}
+//让navigationBarItems引用这个变量
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: addButton
+            )
+
+```
+
+#### End
+
+~~~admonish success title="练习"
+我们已经完成了一个列表的编辑、移动、添加、删除操作，现在，我们可以根据这些逻辑再重新编写一次逻辑，例如加一个电器Section之类的。
+~~~
+
+### alert
+
+~~~admonish example title="作用"
+一般用于应用程序或系统状态发生变化时提示用户，它的提示过于强烈，需要少用。
+~~~
+
+```swift
+@State var showAlert = false
+    var body: some View {
+        Button("⚡️"){
+            showAlert.toggle()
+        }
+        .alert(isPresented: $showAlert){
+            Alert(
+                title: Text("我是警报🚨"),
+                message: Text("因为你用手点击闪电，所以你被警告了")
+            )
+        }
+    }
+```
+
+做一个带选项的警告
+
+```swift
+ Alert(
+    title: Text("我是警报🚨"),
+    message: Text("因为你用手点击闪电，所以你被警告了"),
+    primaryButton: .destructive(Text("你还敢⚡️？")),
+    secondaryButton: .cancel(Text("别取消啊"))
+)
+```
+
+### actionSheet()
+
+~~~admonish example title="作用"
+`actionSheet`用于在当前视图上显示一个弹出窗口，向用户显示一些选项供其选择。当你希望用户在操作的时候有两个或两个以上的选择时，可以使用`ActionSheet`。如果少于或等于两个，可以使用`Alert`
+~~~
+
+```swift
+@State var showAcionSheet = false
+var body: some View {
+    Button("Check me"){
+        showAcionSheet.toggle()
+    }
+    .actionSheet(isPresented: $showAcionSheet,content:getActionSheet)
+
+}
+
+func getActionSheet()->ActionSheet{
+    return ActionSheet(title: Text("你好"))
+}
+```
+
+让我们来自定义一下按钮列表
+
+```swift
+struct ActionSheetBootcamp: View {
+    @State var showAcionSheet = false
+    @State var message = ""
+    var body: some View {
+        VStack {
+            Text(message)
+            
+            Button("Check me"){
+                showAcionSheet.toggle()
+            }
+            .actionSheet(isPresented: $showAcionSheet,content:getActionSheet)
+        }
+       
+    }
+    
+    func getActionSheet()->ActionSheet{
+        let option1 :ActionSheet.Button = .default(Text("我是默认按钮1"),action: {
+            message = "我是一号"
+        })
+        let option2 :ActionSheet.Button =
+            .destructive(Text("我是危险按钮"), action: {
+                message = "你在做什么？"
+            })
+        let option3 :ActionSheet.Button =
+            .cancel(Text("取消"))
+    
+        return ActionSheet(
+            title: Text("你好"),
+            message: Text("this is a message"),
+            buttons: [option1,option2,option3]
+        )
+    }
+}
+
+#Preview {
+    ActionSheetBootcamp()
+}
+```
+
+让我们再加一点新功能。
+
+```swift
+struct ActionSheetBootcamp: View {
+    @State var showAcionSheet = false
+    @State var changeUserConf = false
+    @State var actionSheetOption:ActionSheetOptions = .isOtherPost
+    
+    enum ActionSheetOptions {
+        case isMyPost
+        case isOtherPost
+    }
+    
+    var body: some View {
+        VStack {
+            HStack{
+                Circle()
+                    .frame(width: 30,height: 30)
+                Text("@username")
+                Spacer()
+                Button(action: {
+                    showAcionSheet.toggle()
+                }, label: {
+                    Image(systemName: "ellipsis")
+                })
+                .accentColor(.primary)
+                
+            }
+            .padding()
+            Rectangle()
+                .aspectRatio(1.0,contentMode: .fit)
+            
+            Button(changeUserConf ? "change me":"change other"){
+                let userConf:ActionSheetOptions = changeUserConf ? ActionSheetOptions.isOtherPost: ActionSheetOptions.isMyPost
+                actionSheetOption = userConf
+                changeUserConf.toggle()
+            }
+            
+        }
+        .actionSheet(isPresented: $showAcionSheet,content:getActionSheet)
+       
+    }
+    
+    func getActionSheet()->ActionSheet{
+        let option1 :ActionSheet.Button = .default(Text("共享"),action: {
+            
+        })
+        let option2 :ActionSheet.Button = .destructive(Text("举报"), action: {
+                
+        })
+        let option3 :ActionSheet.Button = .destructive(Text("删除"), action: {
+                
+        })
+        let option4 :ActionSheet.Button = .cancel(Text("取消"))
+        
+        let options:[_] = switch actionSheetOption {
+        case .isOtherPost:
+            [option1,option4]
+        case .isMyPost:
+            [option1,option2,option3,option4]
+        }
+    
+        return ActionSheet(
+            title: Text("你好"),
+            message: Text("选择你的操作"),
+            buttons: options
+        )
+    }
+}
+
+#Preview {
+    ActionSheetBootcamp()
+}
+```
+
+TODO
+
 ## 动画
 
 ### .animation() & withAnimation()
@@ -1850,292 +2336,4 @@ PopoverSheet(showNewScreen: $isSheet)
 综上所述，第二种最为动态，需要时刻待命的就是用第三种，第一种给哪些不想编写过渡代码的使用。
 ```
 
-### NavigationView & NavigationLink
 
->ChengCY: 这个我知道，在前端里面，基本上都有，想必这里讲的是前端里面的路由了吧。
->
->ChengCY: 也许，大概🤔，没看我也不知道。
-
-构建一个`NavitaionView`页面
-
-```swift
-struct NavigationViewBootcamp: View {
-    var body: some View {
-            NavigationView(content: {
-                ScrollView{
-                    NavigationLink(destination: NavSecondScreen()) {
-                        Text("Navigate")
-                    }
-                    .navigationTitle("Box")
-                    .navigationBarTitleDisplayMode(.automatic)
-                    
-                }
-            })   
-        }
-}
-struct NavSecondScreen :View {
-    var body: some View {
-        ignoreSafeAreaView(color: .pink, action: {
-            NavigationLink(destination: ButtonBootcamp(), label: {
-                Text("点我入button")
-            })
-        })
-        .navigationTitle("Hello")
-    }
-}
-```
-
->ChengCY: 放心了，和前端没有什么差别。
-
-~~~admonish example title="没有回退界面的目标视图"
-我们将在这个视图中回退到导航视图，但是没有了回退按钮，怎么办呢？
-
-我们可以很好的利用前面所使用的[@Environment](#sheet)里面注入的`.\presentationMode`来对没有回退的页面进行回退。
-
-```swift
-struct NavSecondScreen :View {
-    var body: some View {
-        ignoreSafeAreaView(color: .pink, action: {
-            NavigationLink(destination: ButtonBootcamp(), label: {
-                Text("点我入button")
-            })
-        })
-        .navigationTitle("Hello")
-        .navigationBarBackButtonHidden()
-    }
-}
-```
-~~~
-
-~~~admonish example title="自定义视图的回退按钮"
-
-```swift
-struct NavSecondScreen :View {
-    
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View {
-        ignoreSafeAreaView(color: .pink, action: {
-            VStack{
-                NavigationLink(destination: ButtonBootcamp(), label: {
-                    Text("点我入button")
-                })
-                
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }, label: {
-                  Text("点我出去")
-                })
-            }
-        })
-        .navigationTitle("Hello")
-        .navigationBarBackButtonHidden()
-    }
-}
-```
-~~~
-
-接下来，我们可以自定义导航栏上的按钮
-
-~~~admonish example title="使用`navigationBarItems`API对导航栏上的按钮自定义"
-
-```swift
-var body: some View {
-        NavigationView(content: {
-            ScrollView{
-                NavigationLink(destination: NavSecondScreen()) {
-                    Text("Navigate")
-                }
-                .navigationTitle("Box")
-                .navigationBarTitleDisplayMode(.automatic)
-                .navigationBarItems(
-                    leading: Image(systemName: "person.fill"),
-                                    trailing: Image(systemName: "gear")
-                )
-                
-            }
-        })
-}
-```
-~~~
-
-再给按钮加上一点功能
-
-```swift
-var body: some View {
-        NavigationView(content: {
-            ScrollView{
-                NavigationLink(destination: NavSecondScreen()) {
-                    Text("Navigate")
-                }
-                .navigationTitle("Box")
-                .navigationBarTitleDisplayMode(.automatic)
-                .navigationBarItems(
-                    leading: NavigationLink(destination: {
-                        //这里可以放入一些自己之前写的组件
-                        AnimationCurves()
-                    }, label: {
-                        Image(systemName: "person.fill")
-                    }),
-                    trailing: NavigationLink(destination: {
-                        ImageBootcamp()
-                    }, label: {
-                        Image(systemName: "gear")
-                    })
-                )
-                
-            }
-        })
-    }
-```
-
-### List
-
-在swift-ui中，`List`不是那个数据集合，而是一个容器视图，它用于展示列表数据。
-
-```swift
-    @State var items :[String] = [
-        "apple","orange","banana"
-    ]
-    var body: some View {
-        List{
-            Section(header:Text("Fruit")) {
-                ForEach(items,id: \.self){ fruit in
-                    Text(fruit)
-                }
-            }
-        }
-    }
-```
-
-~~~admonish info title="可进行的操作"
-可以对列表数据进行Add{{footnote:添加}},edit{{footnote:编辑}},move{{footnote:移动}},delete{{footnote:删除}}操作。
-
-这些操作通常都使用`on`开头，例如删除是`onDelete`
-
-#### delete操作
-
-为列表添加`delete`操作
-
-```swift
-List{
-    Section(header:Text("Fruit")) {
-        ForEach(items,id: \.self){ fruit in
-            Text(fruit)
-        }.onDelete(perform: { indexSet in
-            items.remove(atOffsets: indexSet)
-        })
-    }
-}
-```
-~~~
-
-通常而言，删除逻辑不应该和页面逻辑混合在一起，那会非常的难以维护，我们将删除操作抽象为一个方法 like this
-
-```swift
-func delete(index:IndexSet)  {
-        fruits.remove(atOffsets: index)
-}
-```
-
-方法编写完毕该如何使用呢？很简单，根据规则，我们可以为`onDelete`传递一个方法名即可 like this
-
-```swift
-.onDelete(perform: delete)
-```
-
-```admonish info title="require"
-这是关于方法引用的知识，可以看看我的关于lambda表达式的文章。~~虽然是Java版本，但是逻辑基本上在所有语言中都是共通的~~ [传送门](../../java/lambda/lambda.md)
-
-还是不明白的话就当它是一个简化规则吧。
-```
-
-#### edit操作
-
-为列表添加编辑按钮。
-
-```swift
-var body: some View {
-    NavigationView{
-        List{
-            Section(header:Text("Fruit")) {
-                ForEach(fruits,id: \.self){ fruit in
-                    Text(fruit)
-                }
-                .onDelete(perform: delete)
-            }
-        }
-        .navigationTitle("Grocery list")
-        .navigationBarItems(leading: EditButton())
-    }
-    
-}
-```
-
-#### move操作
-
-为列表添加移动操作
-
-```swift
-func move(from:IndexSet,to:Int){
-    fruits.move(fromOffsets: from, toOffset: to)
-}
-```
-
-同样将该函数交给`onMove`
-
-```swift
-.onMove(perform: move)
-```
-
-#### Add操作
-
-添加add操作
-
-写一个button并放置在导航栏右边
-
-```swift
-.navigationBarItems(
-                leading: EditButton(),
-                trailing: Button("Add", action: {
-                    fruits.append("Pineapple")
-                })
-            )
-```
-
-根据之前的方法引用规则，我们可以把逻辑提取出来。
-
-```swift
-func add(){
-        fruits.append("pineapple")
-}
-```
-
-并修改`navigationBarItems`
-
-```swift
-.navigationBarItems(
-                leading: EditButton(),
-                trailing: Button("Add", action: add)
-            )
-```
-
-我们要让主页面逻辑尽可能简，就需要将其它页面逻辑抽出去。
-
-```swift
-var addButton:some View{
-        Button("Add", action: add)
-}
-//让navigationBarItems引用这个变量
-.navigationBarItems(
-                leading: EditButton(),
-                trailing: addButton
-            )
-
-```
-
-#### End
-
-~~~admonish info title="练习"
-我们已经完成了一个列表的编辑、移动、添加、删除操作，现在，我们可以根据这些逻辑再重新编写一次逻辑，例如加一个电器Section之类的。
-~~~

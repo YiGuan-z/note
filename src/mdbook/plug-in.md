@@ -1,5 +1,11 @@
 # mdbook
 
+## 导入其他md
+
+使用`{{#include ./your.md}}`来导入其他md。
+
+还有一个`{{#playpen ***}}`也能导入，但这是个什么意思呢？
+
 ## mdbook-toc
 
 这是一个大md文件中显示目录的插件
