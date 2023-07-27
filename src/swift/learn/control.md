@@ -1695,5 +1695,298 @@ struct SecondScreen :View {
 ~~~admonish warning
 不要往`sheet`中添加页面控制渲染逻辑。因为那会导致出现许多异常，也不利于我们维护代码，路由的事交给路由做，不要在`sheet`中编写路由逻辑。
 
-苹果给的手册要辩证看待，因为有些被标记为废弃的api也可以使用，api如果想用得太新，那就直接放弃了低版本ios，我还是iphone 7（ios 15.7）啊，想要用也可以，上编译器宏，一大堆版本判断在那里，还不如就用废弃的api，好管理。
+苹果给的手册要辩证看待，因为有些被标记为废弃的api也可以使用，api如果用得太新，那就直接放弃了低版本ios，我还是iphone 7（ios 15.7）啊，想要用也可以，上编译器宏，一大堆版本判断在那里，还不如就用废弃的api，好管理。
 ~~~
+
+### .sheet() vs transition() vs .animation()
+
+在上一章节中，我们学习了如何在一个页面中弹出一个模态框，这一章节我们将会为模态框结合`transition()`和`animation()`。
+
+~~~admonish warning title="require"
+- [Sheet](#sheetfullscreencover)
+- [transition](#transitionfootnote过渡动画)
+- [animation](#animation--withanimation)
+~~~
+
+#### sheet
+
+```swift
+struct PopoverBootcamp: View {
+    @State var isSheet:Bool = false
+    var body: some View {
+        ignoreSafeAreaView(color: .red, action: {
+            VStack{
+                Button(action: {
+                    isSheet.toggle()
+                }, label: {
+                    Text("Button")
+                        .font(.largeTitle)
+                        .foregroundColor(.white)
+                })
+                Spacer()
+            }
+            .sheet(isPresented: $isSheet, content: {
+                PopoverSheet()
+            })
+        })
+    }
+}
+
+struct PopoverSheet:View {
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        
+        ignoreSafeAreaView(color: .purple, alignment: .topLeading,action: {
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }, label: {
+                Image(systemName: "xmark")
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .padding(20)
+                }
+            )}
+        )
+        
+    }
+}
+
+#Preview {
+    PopoverBootcamp()
+}
+#Preview("PopoverSheet()", body: {
+    PopoverSheet()
+})
+```
+
+#### transition
+
+```swift
+struct PopoverBootcamp: View {
+    @State var isSheet:Bool = false
+    var body: some View {
+        ignoreSafeAreaView(color: .red, action: {
+            VStack{
+                Button(action: {
+                    isSheet.toggle()
+                }, label: {
+                    Text("Button")
+                        .font(.largeTitle)
+                        .foregroundColor(.white)
+                })
+                Spacer()
+            }
+
+            ZStack{
+                if isSheet{
+                    PopoverSheet(showNewScreen: $isSheet)
+                        .padding(.top,100)
+                        .transition(.move(edge: .bottom))
+                        .animation(.spring)
+                }
+            }
+            .zIndex(2)
+            
+        })
+    }
+}
+
+struct PopoverSheet:View {
+    @Binding var showNewScreen:Bool
+    
+    var body: some View {
+        
+        ignoreSafeAreaView(color: .purple, alignment: .topLeading,action: {
+            Button(action: {
+                showNewScreen.toggle()
+            }, label: {
+                Image(systemName: "xmark")
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .padding(20)
+                }
+            )}
+        )
+        
+    }
+}
+
+#Preview {
+    PopoverBootcamp()
+}
+```
+
+这样，我们就通过不使用`sheet`的方式就可以完成`sheet`的效果。
+
+```admonish info
+`zIndex`用于控制视图的显示顺序，具有大的索引值在前，小的索引值在后。
+```
+
+#### animation
+
+现在，使用动画对模态框进行控制。
+
+*不需要对`PopoverSheet`有什么多余的修改，只需要将其构造出来，并使用三元表达式将其用`offset`隐藏起来即可*
+
+```swift
+PopoverSheet(showNewScreen: $isSheet)
+                .padding(.top,100)
+                .offset(y: isSheet ? 0.0 : UIScreen.main.bounds.height)
+                .animation(.spring)
+```
+
+#### Summary
+
+```admonish info title="总结"
+三种方法各有优势
+
+使用`sheet`可以方便快捷的设置模态框，但是没有更多的动画效果。
+
+使用`transition`可以获得更多效果的同时更好的操纵控件，但是代码比较复杂。
+
+使用`animation`看起来也非常简单，它在我们的屏幕上隐藏了，但是我们能隐藏多少？况且他们是一次性创建出来的。
+
+综上所述，第二种最为动态，需要时刻待命的就是用第三种，第一种给哪些不想编写过渡代码的使用。
+```
+
+### NavigationView & NavigationLink
+
+>ChengCY: 这个我知道，在前端里面，基本上都有，想必这里讲的是前端里面的路由了吧。
+>
+>ChengCY: 也许，大概🤔，没看我也不知道。
+
+构建一个`NavitaionView`页面
+
+```swift
+struct NavigationViewBootcamp: View {
+    var body: some View {
+            NavigationView(content: {
+                ScrollView{
+                    NavigationLink(destination: NavSecondScreen()) {
+                        Text("Navigate")
+                    }
+                    .navigationTitle("Box")
+                    .navigationBarTitleDisplayMode(.automatic)
+                    
+                }
+            })   
+        }
+}
+struct NavSecondScreen :View {
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            NavigationLink(destination: ButtonBootcamp(), label: {
+                Text("点我入button")
+            })
+        })
+        .navigationTitle("Hello")
+    }
+}
+```
+
+>ChengCY: 放心了，和前端没有什么差别。
+
+~~~admonish example title="没有回退界面的目标视图"
+我们将在这个视图中回退到导航视图，但是没有了回退按钮，怎么办呢？
+
+我们可以很好的利用前面所使用的[@Environment](#sheet)里面注入的`.\presentationMode`来对没有回退的页面进行回退。
+
+```swift
+struct NavSecondScreen :View {
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            NavigationLink(destination: ButtonBootcamp(), label: {
+                Text("点我入button")
+            })
+        })
+        .navigationTitle("Hello")
+        .navigationBarBackButtonHidden()
+    }
+}
+```
+~~~
+
+~~~admonish example title="自定义视图的回退按钮"
+
+```swift
+struct NavSecondScreen :View {
+    
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        ignoreSafeAreaView(color: .pink, action: {
+            VStack{
+                NavigationLink(destination: ButtonBootcamp(), label: {
+                    Text("点我入button")
+                })
+                
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }, label: {
+                  Text("点我出去")
+                })
+            }
+        })
+        .navigationTitle("Hello")
+        .navigationBarBackButtonHidden()
+    }
+}
+```
+~~~
+
+接下来，我们可以自定义导航栏上的按钮
+
+~~~admonish example title="使用`navigationBarItems`API对导航栏上的按钮自定义"
+
+```swift
+var body: some View {
+        NavigationView(content: {
+            ScrollView{
+                NavigationLink(destination: NavSecondScreen()) {
+                    Text("Navigate")
+                }
+                .navigationTitle("Box")
+                .navigationBarTitleDisplayMode(.automatic)
+                .navigationBarItems(
+                    leading: Image(systemName: "person.fill"),
+                                    trailing: Image(systemName: "gear")
+                )
+                
+            }
+        })
+}
+```
+~~~
+
+再给按钮加上一点功能
+
+```swift
+var body: some View {
+        NavigationView(content: {
+            ScrollView{
+                NavigationLink(destination: NavSecondScreen()) {
+                    Text("Navigate")
+                }
+                .navigationTitle("Box")
+                .navigationBarTitleDisplayMode(.automatic)
+                .navigationBarItems(
+                    leading: NavigationLink(destination: {
+                        //这里可以放入一些自己之前写的组件
+                        AnimationCurves()
+                    }, label: {
+                        Image(systemName: "person.fill")
+                    }),
+                    trailing: NavigationLink(destination: {
+                        ImageBootcamp()
+                    }, label: {
+                        Image(systemName: "gear")
+                    })
+                )
+                
+            }
+        })
+    }
+```
+
+### List
