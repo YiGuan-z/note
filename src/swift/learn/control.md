@@ -1990,3 +1990,152 @@ var body: some View {
 ```
 
 ### List
+
+在swift-ui中，`List`不是那个数据集合，而是一个容器视图，它用于展示列表数据。
+
+```swift
+    @State var items :[String] = [
+        "apple","orange","banana"
+    ]
+    var body: some View {
+        List{
+            Section(header:Text("Fruit")) {
+                ForEach(items,id: \.self){ fruit in
+                    Text(fruit)
+                }
+            }
+        }
+    }
+```
+
+~~~admonish info title="可进行的操作"
+可以对列表数据进行Add{{footnote:添加}},edit{{footnote:编辑}},move{{footnote:移动}},delete{{footnote:删除}}操作。
+
+这些操作通常都使用`on`开头，例如删除是`onDelete`
+
+#### delete操作
+
+为列表添加`delete`操作
+
+```swift
+List{
+    Section(header:Text("Fruit")) {
+        ForEach(items,id: \.self){ fruit in
+            Text(fruit)
+        }.onDelete(perform: { indexSet in
+            items.remove(atOffsets: indexSet)
+        })
+    }
+}
+```
+~~~
+
+通常而言，删除逻辑不应该和页面逻辑混合在一起，那会非常的难以维护，我们将删除操作抽象为一个方法 like this
+
+```swift
+func delete(index:IndexSet)  {
+        fruits.remove(atOffsets: index)
+}
+```
+
+方法编写完毕该如何使用呢？很简单，根据规则，我们可以为`onDelete`传递一个方法名即可 like this
+
+```swift
+.onDelete(perform: delete)
+```
+
+```admonish info title="require"
+这是关于方法引用的知识，可以看看我的关于lambda表达式的文章。~~虽然是Java版本，但是逻辑基本上在所有语言中都是共通的~~ [传送门](../../java/lambda/lambda.md)
+
+还是不明白的话就当它是一个简化规则吧。
+```
+
+#### edit操作
+
+为列表添加编辑按钮。
+
+```swift
+var body: some View {
+    NavigationView{
+        List{
+            Section(header:Text("Fruit")) {
+                ForEach(fruits,id: \.self){ fruit in
+                    Text(fruit)
+                }
+                .onDelete(perform: delete)
+            }
+        }
+        .navigationTitle("Grocery list")
+        .navigationBarItems(leading: EditButton())
+    }
+    
+}
+```
+
+#### move操作
+
+为列表添加移动操作
+
+```swift
+func move(from:IndexSet,to:Int){
+    fruits.move(fromOffsets: from, toOffset: to)
+}
+```
+
+同样将该函数交给`onMove`
+
+```swift
+.onMove(perform: move)
+```
+
+#### Add操作
+
+添加add操作
+
+写一个button并放置在导航栏右边
+
+```swift
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: Button("Add", action: {
+                    fruits.append("Pineapple")
+                })
+            )
+```
+
+根据之前的方法引用规则，我们可以把逻辑提取出来。
+
+```swift
+func add(){
+        fruits.append("pineapple")
+}
+```
+
+并修改`navigationBarItems`
+
+```swift
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: Button("Add", action: add)
+            )
+```
+
+我们要让主页面逻辑尽可能简，就需要将其它页面逻辑抽出去。
+
+```swift
+var addButton:some View{
+        Button("Add", action: add)
+}
+//让navigationBarItems引用这个变量
+.navigationBarItems(
+                leading: EditButton(),
+                trailing: addButton
+            )
+
+```
+
+#### End
+
+~~~admonish info title="练习"
+我们已经完成了一个列表的编辑、移动、添加、删除操作，现在，我们可以根据这些逻辑再重新编写一次逻辑，例如加一个电器Section之类的。
+~~~
