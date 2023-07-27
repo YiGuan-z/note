@@ -35,7 +35,9 @@ Text("hello,world".capitalized)
 
 ### Creating Shapes
 
+```admonish
 `.fill`和`.foregroundColor`的区别是前者为指定的形状填充颜色，后者会改变文本和模版渲染元素的颜色。
+```
 
 ```swift
 // Ellipse()
@@ -58,11 +60,14 @@ RoundedRectangle(cornerRadius: 10.0)
 
 ### Color
 
+```admonish info
 `Color.primary`会自动根据设备的显示模式(深色模式&浅色模式)来切换黑白。
 
 我们还可以在`Assets.xcassets`中自定义自己的颜色，由于视频里面的代码中使用的拾色器在这个版本中找不到（根据弹幕内容，这个功能好像无了。），所以只能在`Assets.xcassets`中设置颜色。
 
 在`Assets.xcassets`中设置完颜色后，就可以在代码中使用这个颜色了，在构造Color的时候传入在`Assets.xcassets`中自定义颜色的名称即可使用。
+
+```
 
 ### Gradients
 
@@ -255,11 +260,11 @@ Image(systemName: "heart.fill")
 
 ### VStack,Hstack, and ZStack
 
-VStacks -> Vertical
+VStacks -> Vertical{{footnote:垂直}}
 
-Hstacks -> Horizontal
+Hstacks -> Horizontal{{footnote:水平}}
 
-ZStacks -> zIndex (back to front)
+ZStacks -> zIndex (back to front){{堆叠}}
 
 可以将以下的`ZStack`替换为`VStack`和`HStack`并进行观察。
 
@@ -1493,10 +1498,10 @@ RoundedRectangle(cornerRadius: 25.0)
 |修饰符|中文|动画描述|
 |:---:|:---:|:---:|
 |slide|幻灯片|左进右出|
-|move|移动|自定义|
+|move|移动|统一自定义移入移出动画|
 |opacity|不透明度|淡入淡出|
 |scale|比例尺|从中间放大|
-|asymmetric|不对称|自定义出入动画|
+|asymmetric|不对称|单独自定义移入移出动画|
 ```
 
 我们将会为这一段代码的方形盒子添加过渡
@@ -1561,20 +1566,20 @@ RoundedRectangle(cornerRadius: 30)
                 .animation(.spring)
 ```
 
-```admonish warning
+~~~admonish warning title="bug"
 直接使用`opactiy`并在下面添加动画选项会导致过渡动画不可用，
 
 be like:
 
-    ```swift
-    RoundedRectangle(cornerRadius: 30)
-                        .frame(height: UIScreen.main.bounds.height * 0.5)
-                        .transition(.opacity)
-                        .animation(.spring)
-
-    ```
-
+ ```swift   
+RoundedRectangle(cornerRadius: 30)
+                    .frame(height: UIScreen.main.bounds.height * 0.5)
+                    .transition(.opacity)
+                    .animation(.spring)
 ```
+
+
+~~~
 
 解决办法是：
 
@@ -1590,3 +1595,105 @@ RoundedRectangle(cornerRadius: 30)
 ```swift
 .transition(.asymmetric(insertion: .slide.animation(.bouncy), removal: .scale.animation(.easeIn)))
 ```
+
+### .sheet()&.fullScreenCover()
+
+```admonish info
+`.sheet`用于显示一个可向下拖动关闭的模态视图。
+
+`.fullScreenCover`用于显示一个全屏模态视图，不能通过向下拖动关闭。主要用来显示用于全屏展示的内容，你需要手动提供一个退出方式来关闭这个模态框。
+```
+
+让我们来试试吧。
+
+```swift
+
+@State var showSheet:Bool = false
+var body: some View {
+    
+    ignoreSafeAreaView(color: .green, action: {
+        Button(action: {
+            showSheet.toggle()
+        }, label: {
+            Text("Button")
+                .foregroundColor(.green)
+                .font(.headline)
+                .padding(20)
+                .background(Color.white.cornerRadius(10))
+                .sheet(isPresented: _showSheet.projectedValue, content: {
+                    Text("Hello")
+                })
+        })
+        
+    })
+}
+```
+
+```admonish info
+`ignoreSafeAreaView`是我在[ExtractFunctions](#extract-functions--views)中自定义的一个方法，它主要接收颜色，位置，还有一个能返回视图的函数。它主要返回一个忽略了安全区域的颜色背景。
+```
+
+现在，我们点击🤔试试效果吧。
+
+在`.sheet`中定义第二个视图会非常的不方便，如果你在里面有一个表单之内的，那么就会面临一串巨长无比的代码，这很不好，这时我们就可以根据之间讲述的[Extoract SubView](#extract-subviews)里面的做法，将`.sheet`中的视图组件抽取出来。
+
+就像这样。
+
+~~~admonish example title="提取视图组件"
+
+```swift
+struct SecondScreen :View {
+    var body: some View{
+        ignoreSafeAreaView(color: .red, alignment:.topLeading,action: {
+            Button(action: {
+                
+            }, label: {
+                Image(systemName: "xmark")
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .padding(20)
+                    
+            })
+        })
+    }
+}
+//用于显示预览
+#Preview("secondScreen", body: {SecondScreen()})
+```
+~~~
+
+接下来，我们来写一个关闭功能。
+
+~~~admonish example title="可关闭的视图"
+```swift
+struct SecondScreen :View {
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View{
+        ignoreSafeAreaView(color: .red, alignment:.topLeading,action: {
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }, label: {
+                Image(systemName: "xmark")
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .padding(20)
+                    
+            })
+        })
+    }
+}
+
+
+```
+你可能注意到了这里面有一个`@Environment`的属性包装器。
+它通常用于向我们提供一些系统管理的程序变量，通常可以在这些程序变量中获取到许多功能。
+因为它是从环境上下文中获取的内容，环境上下文中的东西一般由系统创建。
+
+~~~
+
+~~~admonish warning
+不要往`sheet`中添加页面控制渲染逻辑。因为那会导致出现许多异常，也不利于我们维护代码，路由的事交给路由做，不要在`sheet`中编写路由逻辑。
+
+苹果给的手册要辩证看待，因为有些被标记为废弃的api也可以使用，api如果想用得太新，那就直接放弃了低版本ios，我还是iphone 7（ios 15.7）啊，想要用也可以，上编译器宏，一大堆版本判断在那里，还不如就用废弃的api，好管理。
+~~~

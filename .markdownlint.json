@@ -4,6 +4,7 @@
     "MD033": false,
     "no-hard-tabs": false,
     "MD025": false,
-    "MD013": {"line_length": 100}
+    "MD013": {"line_length": 100},
+    "MD048": false
 
 }

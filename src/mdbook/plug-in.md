@@ -100,9 +100,21 @@ graph RL: Right to Left
 
 好看的消息块
 
-[mdbook-admoish](https://github.com/tommilligan/mdbook-admonish.git)
+[mdbook-admoish](https://github.com/tommilligan/mdbook-admonish.git){{footnote:https://tommilligan.github.io/mdbook-admonish/reference.html}}
 
 ```admonish
+Test
+```
+
+```admonish quote
+Test
+```
+
+```admonish success
+Test
+```
+
+```admonish faq
 Test
 ```
 
