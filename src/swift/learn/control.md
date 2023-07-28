@@ -264,7 +264,7 @@ VStacks -> Vertical{{footnote:垂直}}
 
 Hstacks -> Horizontal{{footnote:水平}}
 
-ZStacks -> zIndex (back to front){{堆叠}}
+ZStacks -> zIndex (back to front){{footnote:堆叠}}
 
 可以将以下的`ZStack`替换为`VStack`和`HStack`并进行观察。
 

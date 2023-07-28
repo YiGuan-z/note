@@ -82,4 +82,4 @@ Vim是一号上古神器，你就算只会写简单代码，只要vim用得溜�
 
 ## vim键盘图
 
-[![vim键盘图](./image/vim-keymap.jpeg "vim-keymap")](https://www.runoob.com/linux/linux-vim.html)
+[![vim键盘图](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307281323021.jpeg "vim-keymap")](https://www.runoob.com/linux/linux-vim.html)

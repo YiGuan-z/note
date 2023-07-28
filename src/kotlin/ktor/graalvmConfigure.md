@@ -6,7 +6,7 @@
 
 *在resource中新建如下目录：*
 
-![META-INF/native-image/reflect-config.json](./image/graal-1.jpg)
+![META-INF/native-image/reflect-config.json](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307281359699.jpg)
 
 进行反射资源的配置
 

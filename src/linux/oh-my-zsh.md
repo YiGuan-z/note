@@ -2,7 +2,7 @@
 
 [on-my-zsh](https://ohmyz.sh)以下简称omz，作为一款高颜值的shell框架，可使用命令补全，命令高亮等等……
 
-![配置完成的omz](./image/omz.jpg)
+![配置完成的omz](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307281321429.jpg)
 
 tips：建议在.zshrc中添加以下插件
 

@@ -429,9 +429,10 @@ fun main() {
 
 如下图所示。
 
-![image](./image/test.jpg)
+![image](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307281400664.jpg)
 
 ## END
 
 [完整代码](code.md)
+
 [Github](https://github.com/YiGuan-z/ktor-chat.git)

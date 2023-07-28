@@ -23,4 +23,4 @@ swift-ui采用声明式写法，一系列修饰符都可以使用链式调用添
 
 控件可以在Xcode的右上角点击加号打开选项卡进行控件选择，这对我们查控件文档很有帮助。
 
-![xcode控件选择](./image/Snipaste_2023-07-23_15-24-29.jpg)
+![xcode控件选择](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307281307710.jpg)
