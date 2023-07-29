@@ -63,7 +63,16 @@ RoundedRectangle(cornerRadius: 10.0)
 ```admonish info
 `Color.primary`会自动根据设备的显示模式(深色模式&浅色模式)来切换黑白。
 
-我们还可以在`Assets.xcassets`中自定义自己的颜色，由于视频里面的代码中使用的拾色器在这个版本中找不到（根据弹幕内容，这个功能好像无了。），所以只能在`Assets.xcassets`中设置颜色。
+~~我们还可以在`Assets.xcassets`中自定义自己的颜色，由于视频里面的代码中使用的拾色器在这个版本中找不到（根据弹幕内容，这个功能好像无了。），所以只能在`Assets.xcassets`中设置颜色。~~
+
+经过群佬的补充，可以使用宏来进行颜色设定。
+
+![](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307291500651.jpg)
+
+![](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307291502171.jpg)
+
+最后打个括号，即可唤出拾色器
+![](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307291503778.jpg)
 
 在`Assets.xcassets`中设置完颜色后，就可以在代码中使用这个颜色了，在构造Color的时候传入在`Assets.xcassets`中自定义颜色的名称即可使用。
 
@@ -1814,6 +1823,168 @@ ForEach(msgArray,id: \.self){ msg in
 
 想要使用一个文本编辑器非常简单，它只需要一个参数`Binding<String>`，如果只打算展示，不让修改，那么在参数里使用`.constant`修饰符即可，就像这样。
 `TextEditor(text: .constant(currentText))`
+
+先创建一个栗子
+
+~~~admonish example title="示例"
+```swift
+struct TextEditorBootcamp: View {
+    @State var currentText = "我是一些默认文本内容"
+    var body: some View {
+        NavigationView{
+            VStack{
+                TextEditor(text:$currentText)
+                
+                Button(action: {
+                    
+                }, label: {
+                    Text("save".uppercased())
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                        
+                })
+                    
+            }
+            .padding()
+            .navigationTitle("TextEditor")
+        }
+    }
+}
+```
+~~~
+
+让我们固定一下高度并添加一个`Spacer`以便在下方放置内容展示。
+
+```swift
+struct TextEditorBootcamp: View {
+    @State var currentText = "我是一些默认文本内容"
+    @State var showText=""
+    var body: some View {
+        NavigationView{
+            VStack{
+                TextEditor(text:$currentText)
+                    .frame(height: 300)
+                    .colorMultiply(.gray)
+                    .cornerRadius(10)
+                    .lineSpacing(5)
+                
+                Button(action: {
+                    showText = currentText
+                }, label: {
+                    Text("save".uppercased())
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                       
+                })
+                Text(showText)
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("TextEditor")
+        }
+    }
+}
+```
+
+### Toggle()
+
+```admonish info
+这是一个开关组件，它允许用户在两个互斥的状态之间的切换，相当于用`!`给`bool`取反。
+```
+
+~~~admonish example
+这是一个`Toggle`组件的实例演示，它和`TextEditor`一样，可以调用`constant`进行不可改修饰。
+```swift
+@State var toggleIsOn = false
+var body: some View {
+    Toggle(isOn: $toggleIsOn, label: {
+        Text("Label")
+    })
+    
+}
+```
+~~~
+
+让我们完善一下案例：
+
+```swift
+@State var toggleIsOn = false
+var body: some View {
+    VStack {
+        HStack{
+            Text("系统状态")
+            Text(toggleIsOn ? "在线" : "离线")
+        }
+        
+        Toggle(isOn: $toggleIsOn, label: {
+            Text("网络")
+        })
+        .toggleStyle(SwitchToggleStyle(tint: Color.blue))
+        Spacer()
+    }
+    .padding()
+    
+}
+```
+
+### Picker()
+
+```admonish info
+Picker是一个选择器，它允许用户从一组选项中选择一个。
+```
+
+~~~admonish example
+我喜欢`WheelPickerStyle`样式，因为它选择时的滴答声非常好听。
+发现一个规律，所有组件的样式基本上都是通过组件名+Style来进行设定。
+```swift
+@State var selection = "1"
+var body: some View {
+    Picker(selection: $selection) {
+        ForEach(1..<99){ age in
+            Text("\(age)").tag("\(age)")
+        }
+    } label: {
+        Text("Label")
+    }
+    .pickerStyle(WheelPickerStyle())
+}
+```
+~~~
+
+~~~admonish error title="未经验证"
+可能由于我的xcode版本过高，这段代码中的label始终无法显示。
+Xcode版本：Xcode-15.0.0-Beta.5
+Simulator：iPhone Xs iOS 17.0(21A5291g)
+```swift
+Picker(selection: $selection) {
+        ForEach(filterOptions,id: \.self){ option in
+            Text(option).tag(option)
+        }
+    } label: {
+        HStack{
+            Text("filter:")
+            
+            Text(selection)
+        }
+        .font(.largeTitle)
+        .foregroundColor(.white)
+        .padding()
+        .padding(.horizontal)
+        .background(Color.blue)
+        .cornerRadius(10)
+        .shadow(color: Color.blue.opacity(0.3),radius: 10,x: 0,y: 10)
+    }
+```
+~~~
+
 
 TODO
 
