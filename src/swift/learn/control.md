@@ -1935,7 +1935,7 @@ var body: some View {
 }
 ```
 
-### Picker()
+### Picker
 
 ```admonish info
 Picker是一个选择器，它允许用户从一组选项中选择一个。
@@ -1961,8 +1961,11 @@ var body: some View {
 
 ~~~admonish error title="未经验证"
 可能由于我的xcode版本过高，这段代码中的label始终无法显示。
+
 Xcode版本：Xcode-15.0.0-Beta.5
+
 Simulator：iPhone Xs iOS 17.0(21A5291g)
+
 ```swift
 Picker(selection: $selection) {
         ForEach(filterOptions,id: \.self){ option in
@@ -1985,6 +1988,304 @@ Picker(selection: $selection) {
 ```
 ~~~
 
+视频中说的`UISegmentedControl.appearance().selectedSegmentTintColor = UIColor.red`操作，可以将它看为对app全局配置的修改，会导致运行到这里时，更改整个app的被选择时色彩，用来自定义主题倒是无妨。
+
+### ColorPicker
+
+```admonish info
+它是定向特化的颜色版本选择器。
+
+专门用于渲染颜色。
+```
+
+让我们简单编写一个切换背景颜色的demo
+
+```swift
+@State var backgroundColor = Color.primary
+var body: some View {
+    
+    ZStack {
+        backgroundColor.ignoresSafeArea()
+        
+        ColorPicker(
+            selection: $backgroundColor, supportsOpacity: true) {
+                Text("选择你的背景色")
+        }
+        .padding()
+        .background(Color.blue)
+        .foregroundColor(.white)
+        .font(.headline)
+        .padding(50)
+    }
+    
+}
+
+```
+
+### DatePicker
+
+```admonish info
+这下应该能从单词中看出这是什么了吧，没错，这是{{footnote:时间选择器}}~~皮一下很开心~~
+```
+
+```swift
+@State var selectionDate:Date = Date()
+    var body: some View {
+        VStack{
+            Text("选择的时间是\(selectionDate)")
+            DatePicker("Select a date", selection: $selectionDate)
+        }
+    }
+```
+
+经过前面三个选择器的洗礼，我们现在使用选择器将会得心应手。
+
+和其它样式选择一样，都是控件名+Style。
+
+```admonish hide
+`.datePickerStyle(WheelDatePickerStyle())`
+```
+
+我们也可以精准控制选择日期选择和时间选择
+
+~~~admoish example title="示例"
+```swift
+DatePicker("Select a date", selection: $selectionDate,displayedComponents: [.hourAndMinute])
+```
+~~~
+
+也可以去限制用户的时间选择范围
+
+~~~admoish example title="示例"
+@State var selectionDate:Date = Date()
+
+let startDate = Calendar.current.date(from: DateComponents(year: 2017)) ?? Date()
+
+let endDate = Date()
+
+var dateFormatter : DateFormatter {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    return formatter
+}
+
+var body: some View {
+    VStack{
+        HStack{
+            Text("select date is:")
+            Text(dateFormatter.string(from: selectionDate))
+                .font(.headline)
+        }
+        DatePicker("Select a date",
+                    selection: $selectionDate,
+                    in: startDate...endDate, displayedComponents: [.date,.hourAndMinute]
+                    
+        )
+            
+    }
+}
+~~~
+
+### stepper
+
+```admonish info
+步进器，可以让用户通过`+`和`-`来增加或减少值。
+```
+
+话不多说直接上demo
+
+```swift
+struct StepperBootcamp: View {
+    @State var value = 1
+    var body: some View {
+        VStack{
+            HStack{
+                Text("value:")
+                Text("\(value)")
+            }
+            Stepper("我是步进器", value: $value) { change in
+                if change {
+                    value += 1
+                }else{
+                    value -= 1
+                }
+            }
+        }
+        .padding()
+    }
+}
+```
+
+```admonish info
+`onEditingChanged`参数传入的`bool`值为`true`代表`+`为`false`代表`-`
+```
+
+根据我们之前的抽象方法规则，应该把计算逻辑从UI声明中移开。
+
+```swift
+struct StepperBootcamp: View {
+    @State var value = 1
+    var body: some View {
+        VStack{
+            HStack{
+                Text("value:")
+                Text("\(value)")
+            }
+            Stepper("我是步进器", value: $value,onEditingChanged: changeValue)
+        }
+        .padding()
+    }
+    
+    func changeValue(_ status:Bool) {
+        if status {
+            value += 1
+        }else{
+            value -= 1
+        }
+    }
+}
+```
+
+### slider
+
+```admonish info
+滑块，通常用于视频控制，音量控制什么的。
+```
+
+废话不多说，使用了这么多组件或多或少都能又点感觉了吧，让我们直接上一个demo。
+
+```swift
+struct SliderBootcamp: View {
+    @State var sliderValue = 0.0
+    var body: some View {
+        VStack{
+            HStack{
+                Text("sliderValue:")
+                Text("\(sliderValue)")
+            }
+            Slider(value: $sliderValue,in: 0.0...1.0,step: 0.5)
+            
+        }
+        .padding()
+    }
+}
+```
+
+在`in`参数中，是一个开闭范围。
+在`step`参数中，需要定义一个步进值，它确定每一步`+-`多少。
+
+### TabView & PageTabVIewStyle
+
+~~~admonish info
+通常用于选项卡的切换，例如QQ程序下面的那三个图标。
+~~~
+
+```swift
+struct TabViewBootcamp: View {
+    var body: some View {
+        TabView {
+            Text("home tab")
+                .tabItem {
+                    Image(systemName: "house.fill")
+                    Text("Home")
+                }
+            Text("browse tab")
+                .tabItem {
+                    Image(systemName: "globe")
+                    Text("Browse")
+                }
+            Text("profile tab")
+                .tabItem {
+                    Image(systemName: "person.fill")
+                    Text("Profile")
+                }
+        }
+        .accentColor(.pink)
+    }
+}
+```
+
+可以将这些`Text`替换为你自己的`View`。
+
+将Home tab抽出来。
+
+```swift
+struct TabViewBootcamp: View {
+    var body: some View {
+        TabView {
+            HomeView()
+                .tabItem {
+                    Image(systemName: "house.fill")
+                    Text("Home")
+                }
+            Text("browse tab")
+                .tabItem {
+                    Image(systemName: "globe")
+                    Text("Browse")
+                }
+            Text("profile tab")
+                .tabItem {
+                    Image(systemName: "person.fill")
+                    Text("Profile")
+                }
+        }
+        .accentColor(.pink)
+    }
+}
+
+#Preview {
+    TabViewBootcamp()
+}
+
+struct HomeView: View {
+    var body: some View {
+        ZStack{
+            Color.red.edgesIgnoringSafeArea(.top)
+            Text("home tab")
+                .font(.title)
+                .foregroundColor(.white)
+        }
+        
+    }
+}
+```
+
+```admonish warning
+`.tabItem`修饰符必须在TableView中，不可在`HomeView`里面，如果将它写在`HomeView`中，我们就无法对其高度定制化。
+```
+
+让我们来使用一下`TabView`中的`selection`参数，它需要接收一个绑定值，这个绑定值是什么并不重要，可以是数字，可以是字符串，可以是任何可查找的内容。
+
+只需要我们在声明完`.tabItem`后为它添加上`tag(_ tag:)`声明即可。
+
+以下是声明完成的View
+
+```swift
+@State var selectionView = 1
+var body: some View {
+    TabView(selection:$selectionView) {
+        HomeView()
+            .tabItem {
+                Image(systemName: "house.fill")
+                Text("Home")
+            }
+            .tag(0)
+        Text("browse tab")
+            .tabItem {
+                Image(systemName: "globe")
+                Text("Browse")
+            }
+            .tag(1)
+        Text("profile tab")
+            .tabItem {
+                Image(systemName: "person.fill")
+                Text("Profile")
+            }
+            .tag(2)
+    }
+    .accentColor(.pink)
+}
+```
 
 TODO
 
