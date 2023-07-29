@@ -1595,7 +1595,8 @@ struct ActionSheetBootcamp: View {
             HStack{
                 Circle()
                     .frame(width: 30,height: 30)
-                Text("@username")
+                    
+                Text("@ChengCY")
                 Spacer()
                 Button(action: {
                     showAcionSheet.toggle()
@@ -1608,9 +1609,9 @@ struct ActionSheetBootcamp: View {
             .padding()
             Rectangle()
                 .aspectRatio(1.0,contentMode: .fit)
-            
+        
             Button(changeUserConf ? "change me":"change other"){
-                let userConf:ActionSheetOptions = changeUserConf ? ActionSheetOptions.isOtherPost: ActionSheetOptions.isMyPost
+                let userConf:ActionSheetOptions = changeUserConf ? ActionSheetOptions.isMyPost: ActionSheetOptions.isOtherPost
                 actionSheetOption = userConf
                 changeUserConf.toggle()
             }
@@ -1634,9 +1635,9 @@ struct ActionSheetBootcamp: View {
         
         let options:[_] = switch actionSheetOption {
         case .isOtherPost:
-            [option1,option4]
-        case .isMyPost:
             [option1,option2,option3,option4]
+        case .isMyPost:
+            [option1,option3,option4]
         }
     
         return ActionSheet(
@@ -1651,6 +1652,168 @@ struct ActionSheetBootcamp: View {
     ActionSheetBootcamp()
 }
 ```
+
+### contextMenu(){{footnote:上下文菜单}}
+
+```admonish quote title="小剧场"
+ChengCY： 👀，这东西就像电脑的右键菜单一样。
+
+ChengCY：我的3D按压啊！！！绝版了。
+```
+
+~~~admonish info title="使用方式"
+为你的view添加`.contextMenu`修饰器
+~~~
+
+```swift
+var body: some View {
+    VStack(alignment: .leading,spacing: 10){
+        Image(systemName: "house.fill")
+        Text("Home")
+            .font(.headline)
+        Text("this is your home")
+            .font(.subheadline)
+    }
+    .foregroundColor(.white)
+    .padding(30)
+    .background(Color.blue)
+    .cornerRadius(30)
+    .contextMenu(menuItems: {
+        Button(action: {
+            
+        }, label: {
+            Label("🔥", systemImage: "flame.fill")
+        })
+        
+        Button {
+            
+        } label: {
+            Label("💦", systemImage:"shower.handheld.fill")
+        }
+        
+        Button {
+            
+        } label: {
+            HStack{
+                Text("🌞")
+                Image(systemName: "sun.max.fill")
+            }
+        }
+    })
+}
+```
+
+### TextField()
+
+这是一个文本输入框，专门接收用户输入
+
+~~我其实一直没想到`Color`也能使用`opacity`和`cornerRadius`~~
+
+```swift
+struct TextfieldBootcamp: View {
+    @State var inputText=""
+    var body: some View {
+        TextField("Type some here", text: $inputText)
+            //设置样式
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .padding()
+            .background(Color.gray.opacity(0.3).cornerRadius(10))
+    }
+}
+```
+
+再优化优化
+
+```swift
+@State var inputText=""
+NavigationView {
+    VStack{
+        HStack{
+            TextField("Type some here", text: $inputText)
+                .padding()
+                .background(Color.gray.opacity(0.3).cornerRadius(10))
+                .foregroundColor(.blue)
+                .font(.caption)
+                
+        }
+        Button(action: {
+            
+        }, label: {
+            Text("save".uppercased())
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue.cornerRadius(10))
+                .foregroundColor(.white)
+                .font(.headline)
+        })
+        
+        Spacer()
+        Text("你好")
+    }
+    .padding()
+    .navigationTitle("TextField Bootcamp")
+}
+```
+
+让我们编写一个保存文本内容的函数和一个验证是否合法的函数
+
+```swift
+func saveText(){
+    msgArray.append(inputText)
+    inputText = ""
+}
+
+func textIsAppropriate()->Bool{
+    if inputText.count > 3{
+        return true
+    }
+    return false
+}
+```
+
+再对Button进行改造，并对外部数据进行遍历并展示。
+
+```admonish info
+在这里我们多次调用了`textIsAppropriate`函数来判定文本内容是否合法，如果和法，便可以进行保存，按钮会变为蓝色并可用，如果不合法，按钮会变为灰色，并且不可用
+```
+
+```swift
+@State var inputText=""
+
+@State var msgArray:[String] = []
+
+Button(action:{
+    if textIsAppropriate() {
+        saveText()
+    }
+}, label: {
+    Text("save".uppercased())
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(textIsAppropriate() ? Color.blue : Color.gray)
+        .cornerRadius(10)
+        .foregroundColor(.white)
+        .font(.headline)
+})
+.disabled(!textIsAppropriate())
+
+ForEach(msgArray,id: \.self){ msg in
+    Text(msg)
+}
+```
+
+### TextEditor()
+
+```admonish quote title="废话叨叨"
+刚才学习了输入框，现在又开始学习编辑框了。
+```
+
+```admonish warning
+如果我们需要用户对多行文本进行编辑，就需要文本框以支持。单行就duck不必。
+```
+
+想要使用一个文本编辑器非常简单，它只需要一个参数`Binding<String>`，如果只打算展示，不让修改，那么在参数里使用`.constant`修饰符即可，就像这样。
+`TextEditor(text: .constant(currentText))`
 
 TODO
 
