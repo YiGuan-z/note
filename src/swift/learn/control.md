@@ -63,7 +63,7 @@ RoundedRectangle(cornerRadius: 10.0)
 ```admonish info
 `Color.primary`会自动根据设备的显示模式(深色模式&浅色模式)来切换黑白。
 
-~~我们还可以在`Assets.xcassets`中自定义自己的颜色，由于视频里面的代码中使用的拾色器在这个版本中找不到（根据弹幕内容，这个功能好像无了。），所以只能在`Assets.xcassets`中设置颜色。~~
+我们还可以在`Assets.xcassets`中自定义自己的颜色，~~由于视频里面的代码中使用的拾色器在这个版本中找不到（根据弹幕内容，这个功能好像无了。）~~，所以只能在`Assets.xcassets`中设置颜色。
 
 经过群佬的补充，可以使用宏来进行颜色设定。
 
@@ -2426,8 +2426,111 @@ Text("This Color is globally adaptive!")
 @Environment(\.colorScheme) var colorScheme
 //并在结构体中添加
 Text("This color is locally adaptive!")
-                        .foregroundColor(colorScheme == .light ? .blue:.yellow)
+    .foregroundColor(colorScheme == .light ? .blue:.yellow)
 ```
+
+### onTapgesture
+
+```admonish info
+👀看上去，非常的点击事件。
+```
+
+让我们写一个切换颜色的按钮。
+
+```swift
+@State var isSelected = false
+
+var body: some View {
+    VStack(spacing:40){
+        RoundedRectangle(cornerRadius: 25.0)
+            .frame(height: 200)
+            .foregroundColor(isSelected ?  .red:.green)
+        
+        Button(action: {
+            isSelected.toggle()
+        }, label: {
+            Text("Button")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(height: 50)
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .cornerRadius(25)
+                
+        })
+        Spacer()
+        
+    }
+    .padding(40)
+}
+```
+
+这时候我们来试一试Tapgesture
+
+```swift
+@State var isSelected = false
+
+var body: some View {
+    VStack(spacing:40){
+        RoundedRectangle(cornerRadius: 25.0)
+            .frame(height: 200)
+            .foregroundColor(isSelected ?  .red:.green)
+        
+        Button(action: {
+            isSelected.toggle()
+        }, label: {
+            Text("Button")
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(height: 50)
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
+                .cornerRadius(25)
+                
+        })
+        
+        Text("Button")
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(height: 50)
+            .frame(maxWidth: .infinity)
+            .background(Color.blue)
+            .cornerRadius(25)
+            .onTapGesture {
+                isSelected.toggle()
+            }
+        
+        
+        Spacer()
+        
+    }
+    .padding(40)
+}
+
+```
+
+点击下面那个Button试试。
+
+同时我们也可以指定点击次数。
+
+```swift
+Text("Button")
+    .font(.headline)
+    .foregroundColor(.white)
+    .frame(height: 50)
+    .frame(maxWidth: .infinity)
+    .background(Color.blue)
+    .cornerRadius(25)
+//                .onTapGesture {
+//                    isSelected.toggle()
+//                }
+    .onTapGesture(count: 5, perform: {
+        isSelected.toggle()
+    })
+```
+
+来试试点击5次按钮。
+
 
 TODO
 
@@ -3113,4 +3216,72 @@ PopoverSheet(showNewScreen: $isSheet)
 综上所述，第二种最为动态，需要时刻待命的就是用第三种，第一种给哪些不想编写过渡代码的使用。
 ```
 
+## 生命周期{{footnote:Lifecycle}}
 
+如果你是Spring程序员，请先卸载你背的`bean`生命周期，因为没什么用。
+
+### onAppear
+
+当视图出现的时候，就会立即执行。
+
+~~~admonish example
+
+```swift
+@State var myText = "Start text."
+var body: some View {
+    NavigationView{
+        ScrollView {
+            Text(myText)
+        }
+        .onAppear(perform: {
+            myText = "This is the new Text"
+        })
+        .navigationTitle("On Appear Bootcamp")
+    }   
+}
+```
+
+~~~
+
+让我们为它增加点延时.
+
+~~~admonish example
+```swift
+.onAppear(perform: {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 5){
+        myText = "This is the new Text"
+    }
+})
+```
+
+观察视图变化。
+
+~~~
+
+### onDisappear
+
+当离开视图的时候，它会开始执行。
+
+和`onAppear`的用法一样，接收一个闭包，在视图离开的时候开始执行。
+通常用于清理一些东西，或者发送个消息到服务器，或者保存用户输入。
+
+```swift
+@State var count = 0
+var body: some View {
+    NavigationView{
+        ScrollView {
+            LazyVStack{
+                ForEach(0..<50){ _ in
+                    RoundedRectangle(cornerRadius: 25.0)
+                        .frame(height: 200)
+                        .padding()
+                        .onDisappear(perform: {
+                            count += 1
+                        })
+                }
+            }
+        }
+        .navigationTitle("On Appear :\(count)")
+    }   
+}
+```
