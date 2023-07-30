@@ -2287,6 +2287,148 @@ var body: some View {
 }
 ```
 
+现在，我们需要再HomeView里面做一个按钮用于跳转到`profile tab`中。
+
+这里用到了我们之前学习的`@Binding`变量，我们可以通过修改它的值来跳转页面。
+
+> 俺寻思应该可以用枚举来对视图进行切换，123 abc什么的实在记不住。
+
+```swift
+struct HomeView: View {
+    @Binding var selectTab:Int
+    
+    var body: some View {
+        ZStack{
+            Color.red.edgesIgnoringSafeArea(.top)
+            VStack{
+                Text("home tab")
+                    .font(.title)
+                    .foregroundColor(.white)
+                Button {
+                    selectTab = 2
+                } label: {
+                    Text("Go to profile")
+                        .font(.headline)
+                        .padding()
+                        .padding(.horizontal)
+                        .background(Color.white)
+                        .cornerRadius(10)
+                }
+
+            }
+        }
+        
+    }
+}
+```
+
+让我们注释掉之前的代码，编写一个可展示图片的组件。
+
+```swift
+TabView {
+        RoundedRectangle(cornerRadius: 25.0)
+            .foregroundColor(.blue)
+        RoundedRectangle(cornerRadius: 25.0)
+            .foregroundColor(.red)
+        RoundedRectangle(cornerRadius: 25.0)
+            .foregroundColor(.yellow)
+    }
+    .tabViewStyle(PageTabViewStyle())
+    .frame(height: 300)
+    Spacer()
+```
+
+为该组件设置系统图像
+
+```swift
+let icons = [
+    "heart.fill","globe","house.fill","person.fill"
+]
+
+var body: some View {
+    TabView {
+        ForEach(icons,id: \.self){ icon in
+            Image(systemName: icon)
+                .resizable()
+                .scaledToFit()
+                .padding(30)
+        }
+    }
+    .background(
+        RadialGradient(colors: [.red,.blue], center: .center, startRadius: 5, endRadius: 300)
+    )
+    .tabViewStyle(PageTabViewStyle())
+    .frame(height: 300)
+    Spacer()
+}
+
+```
+
+### Dark Mode
+
+```admonish info
+让我们看看如何来使用深色模式。
+```
+
+使用以下代码，并在模拟器中尝试。
+
+```admonish info
+在预览代码块中，使用`.preferredColorScheme(.dark)`修饰器即可使模拟器在浅色模式和深色模式中切换。
+```
+
+```swift
+var body: some View {
+    NavigationView{
+        ScrollView{
+            VStack(spacing:20){
+                Text("This color is PRIMARY")
+                    .foregroundColor(.primary)
+                
+                Text("This color is SECONDARY")
+                    .foregroundColor(.secondary)
+                
+                Text("This color is black")
+                    .foregroundColor(.black)
+                
+                Text("This color is white")
+                    .foregroundColor(.white)
+            }
+        }
+        .navigationTitle("Dark Mode Bootcamp")
+    }
+}
+```
+
+由此可见，`primary`和`secondary`具有适应性，而普通的单色就没有。
+
+我们可以在`Assets.xcassets`中创建颜色。
+
+![color](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202307301305825.jpg)
+
+我们可以在右侧选项卡中的`Appearances`选项设置是否为自适应颜色。
+
+通常情况下，我们使用any和dark。
+
+现在，我们新建一个颜色，并将其命名为`AdaptiveColor`，Appearances设置为 `any,dark`，颜色自定。
+
+接下来，我们回到之前编写组件的页面，并添加上。
+
+```swift
+Text("This Color is globally adaptive!")
+                        .foregroundColor(Color("AdaptiveColor"))
+```
+
+切换浅色模式和深色模式看看吧。
+
+也可以使用环境上下文中的`colorScheme`来手动切换颜色。
+
+```swift
+@Environment(\.colorScheme) var colorScheme
+//并在结构体中添加
+Text("This color is locally adaptive!")
+                        .foregroundColor(colorScheme == .light ? .blue:.yellow)
+```
+
 TODO
 
 ## 动画
