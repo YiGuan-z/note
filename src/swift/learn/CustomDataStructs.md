@@ -1,6 +1,6 @@
-# 数据结构和数据持久化
+# 使用简单数据结构进行视图的创建
 
-在swift中，有`class`和`struct`可以定义数据类型，我们一般使用`struct`来对数据进行定义。因为结构体是值类型，赋给另一个变量的时候会创建一个副本而不影响原类型。
+在swift中，有`class`和`struct`可以定义数据类型，我们一般使用`struct`来对数据进行定义。因为结构体是值类型，赋给另一个变量的时候会创建一个副本而不影响原变量。
 
 但在某些情况下使用`class`类型更合适，这取决于是否需要变量引用到同一实例。
 
@@ -386,3 +386,236 @@ List{
 ```
 
 可以使用`@StateObject`来代替`@ObservedObject`，前者在视图刷新的时候不会重新加载，后者会在视图刷新的时候重新加载。相当于前者是每次都引用的一个对象重新加载的时候不会销毁，后者是每次都创建一个对象，如果视图被重新加载，它也会重新创建和销毁。
+
+让我们新建一个页面。
+
+```swift
+struct RandomScreen :View{
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View{
+        ZStack{
+            Color.green.ignoresSafeArea()
+            Button {
+                presentationMode.wrappedValue.dismiss()
+            } label: {
+                Text("go back".uppercased())
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .bold()     
+            }
+
+        }
+    }
+}
+#Preview("RandomView", body: {
+    RandomScreen()
+})
+```
+
+并为我们之前的`NavigationView`写入一个导航按钮引导到这个页面。
+
+将它添加到`List`的修饰器中
+
+```swift
+.navigationBarItems(trailing:
+                        NavigationLink(
+                            destination: RandomScreen(),
+                            label: {
+                                Image(systemName: "arrow.right")
+                                    .font(.title)
+}))
+```
+
+这时候在我们的程序中点击按钮再返回后就会发现，水果在增殖，数据条目不符合我们的预期。
+
+因为`onAppear`是在视图出现的时候立即执行，所以会重复加载并添加数据。
+
+这个很简单，我们让`FruitViewModel`来初始化这些数据即可。
+
+在FruitViewModel的init函数中调用getFruits方法 like this
+
+```swift
+class FruitViewModel :ObservableObject{
+    @Published var fruitArray:[FruitModel] = []
+    @Published var isLoading: Bool = false
+    
+    init(){
+        getFruits()
+    }
+    
+    func getFruits(){
+        isLoading = true
+        let fruit1 = FruitModel(name: "Apples", count: 5)
+        let fruit2 = FruitModel(name: "Banana", count: 10)
+        let fruit3 = FruitModel(name: "Orange", count: 15)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now()+5)  {[unowned self] in
+            fruitArray.append(fruit1)
+            fruitArray.append(fruit2)
+            fruitArray.append(fruit3)
+            isLoading = false
+        }
+    }
+    
+    
+    func deleteFruit(index:IndexSet){
+        fruitArray.remove(atOffsets: index)
+    }
+}
+```
+
+想要在不同页面传递同一份数据
+
+可以在子页面声明变量并被`@ObservedObject`标注，在父视图创建子视图的时候将需要共享的变量传递即可。
+
+> 如果在子视图中使用`@StateObject`标注变量，则会创建一个新的出来，而不是引用父视图的可观察对象，可能会出现某些意外哦。
+
+## @EnvironmentObject
+
+```admonish info
+这是一个可以用来从视图环境中获取对应值的标注，我们可以用它在某个页面树中传递一个变量，这样该页面和它的子页面都将能够访问到这个变量。
+```
+
+例如：
+
+```swift
+class EnvironmentViewModel: ObservableObject{
+    @Published var dataArray:[String] = []
+    
+    init(){
+        getData()
+    }
+    
+    func getData(){
+        dataArray.append(contentsOf: ["iPhone","iPad","Android"])
+    }
+}
+
+struct EnvironmentObjectBootcamp: View {
+    
+    @EnvironmentObject var environmentViewModel:EnvironmentViewModel
+    
+    var body: some View {
+        NavigationView{
+            List{
+                ForEach(environmentViewModel.dataArray,id: \.self){ item in
+                    Text(item)
+                }
+            }
+             .navigationTitle("Devices")
+        }
+    }
+}
+
+#Preview {
+    EnvironmentObjectBootcamp()
+    //试着注释掉这一段，并思考它起到了什么作用。
+        .environmentObject(EnvironmentViewModel())
+}
+```
+
+让我们为这些项目添加一个子页面。
+
+将ForEach中的项目修改为导航链接。
+
+```swift
+NavigationLink(
+    destination: SubVie(item)
+) {
+    Text(item)
+}
+
+struct SubView:View {
+    let selectedItem:String
+    
+    var body: some View {
+        ZStack{
+            Color.green.ignoresSafeArea()
+            
+            Text(selectedItem)
+                .font(.headline)
+                .foregroundColor(.green)
+                .padding()
+                .padding(.horizontal)
+                .background(Color.white)
+                .cornerRadius(30)
+        }
+    }
+}
+```
+
+再编写一个页面
+
+```swift
+struct FinalView:View {
+    //90, 190, 246
+    let blue1 = Color(red: 90/255, green: 190/255, blue: 246/255)
+    //49, 96, 191
+    let blue2 = Color(red: 49/255, green: 96/255, blue: 191/255)
+    
+    var body: some View {
+        ZStack{
+            LinearGradient(colors: [self.blue1,self.blue2], startPoint: .topLeading, endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack{
+                    Text("text 1")
+                    Text("text 2")
+                    Text("text 3")
+                }
+                .font(.largeTitle)
+            }
+        }
+    }
+}
+```
+
+在SubView中将视图链接起来。
+
+```swift
+struct SubView:View {
+    let selectedItem:String
+    
+    var body: some View {
+        ZStack{
+            Color.green.ignoresSafeArea()
+            
+            NavigationLink(destination: FinalView()) {
+                Text(selectedItem)
+                    .font(.headline)
+                    .foregroundColor(.green)
+                    .padding()
+                    .padding(.horizontal)
+                    .background(Color.white)
+                    .cornerRadius(30)
+            }
+            
+        }
+    }
+}
+```
+
+再编写三个预览。
+
+```swift
+#Preview {
+    EnvironmentObjectBootcamp()
+        .environmentObject(EnvironmentViewModel())
+}
+#Preview("SubView") {
+    SubView(selectedItem: "iPhone")
+}
+#Preview("FinalView"){
+    FinalView()
+}
+```
+
+如果不支持`#Preview`，那么可以将你的预览结构体多复制几个出来，改个名字，并将内容编写进去即可。
+
+接着，我们在`SubView`中写入`@EnvironmentObject var environmentViewModel:EnvironmentViewModel`变量，他会从环境中自行寻找`EnvironmentViewModel`找不到就会爆炸💥（在没有使用变量的时候不会爆炸）。
+
+在`FinalView`里面也可以加入这个变量，在变量加入完成后你可以自己试试用变量对数据进行渲染。
+
+再试试在三个预览中加了`.environmentObject(EnvironmentViewModel())`和不加有什么区别，和为什么第一个预览中，三个视图都能获取到`environmentViewModel`。
