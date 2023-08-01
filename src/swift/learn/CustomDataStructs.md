@@ -616,6 +616,124 @@ struct SubView:View {
 
 接着，我们在`SubView`中写入`@EnvironmentObject var environmentViewModel:EnvironmentViewModel`变量，他会从环境中自行寻找`EnvironmentViewModel`找不到就会爆炸💥（在没有使用变量的时候不会爆炸）。
 
-在`FinalView`里面也可以加入这个变量，在变量加入完成后你可以自己试试用变量对数据进行渲染。
+在`FinalView`里面也可以加入这个变量，在变量加入完成后你可以自己试试用`environmentViewModel`变量对数据进行渲染。
 
 再试试在三个预览中加了`.environmentObject(EnvironmentViewModel())`和不加有什么区别，和为什么第一个预览中，三个视图都能获取到`environmentViewModel`。
+
+## @AppStorage
+
+```admonish info
+这是一个轻量级的数据存储方案，只能存储一些少量数据，可以将它当作前端中的localStorage使用。
+和前端的localStorage不同的是，它是私密且无法被其它程序访问的，越狱后除外。
+```
+
+可以依据下面代码来理解，需要在app的main中使用这个页面，因为预览中不好使用该功能。
+
+需要使用模拟器或者实体设备！！！
+
+```swift
+@main
+struct HelloWorldApp: App {
+    var body: some Scene {
+        WindowGroup {
+            AppStorageBootcamp()
+        }
+    }
+}
+
+
+struct AppStorageBootcamp: View {
+    @State var currentText:String? = nil
+    
+    var body: some View {
+        VStack(spacing:20){
+            
+            Text(currentText ?? "Add Name here")
+            
+            if let currentText{
+                Text(currentText)
+            }
+            
+            Button(action: {
+                currentText = "ChengCY"
+                UserDefaults.standard.set(currentText, forKey: "name")
+            }, label: {
+                Text("save".uppercased())
+                    .font(.largeTitle)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .cornerRadius(25)
+            })
+            
+            Button(action:{
+                currentText = nil
+                UserDefaults.standard.removeObject(forKey: "name")
+            } label: {
+                Text("clear".uppercased())
+                    .font(.largeTitle)
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(25)
+            })
+
+        }
+        .onAppear(perform: {
+            let name = UserDefaults.standard.string(forKey: "name")
+            if let name{
+                currentText = name
+            }
+        })
+    }
+}
+
+#Preview {
+    AppStorageBootcamp()
+}
+```
+
+我们实现了一个可以清除，保存，展示的一个简单页面。
+
+我们可以使用@AppStorage来对数据的存储进行简化操作，就像下面这样。
+
+```swift
+@AppStorage("name")  var currentText:String?
+
+var body: some View {
+    VStack(spacing:20){
+        
+        Text(currentText ?? "Add Name here")
+        
+        if let currentText{
+            Text(currentText)
+        }
+        
+        Button{
+            currentText = "ChengCY"
+        } label: {
+            getTextButton(text: "save", color: .green)
+        }
+        
+        Button{
+            currentText = nil
+        } label: {
+            getTextButton(text: "clear", color: .red)
+        }
+
+    }
+}
+
+func getTextButton(text:String,color:Color)->some View{
+    return Text(text.uppercased())
+        .font(.largeTitle)
+        .padding()
+        .background(color)
+        .foregroundColor(.white)
+        .cornerRadius(25)
+}
+```
+
+将对`UserDefaults.standard`的`get set`方法进行代理调用，不需要手动操纵，只需要记住你当前存储的key即可。
+
+并且不需要使用`onAppear`进行数据加载操作。
