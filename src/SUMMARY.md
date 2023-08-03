@@ -64,6 +64,7 @@
   - [swift-ui](swift/learn/ui.md)
   - [布局与控件](swift/learn/control.md)
   - [使用简单数据结构进行视图的创建](swift/learn/CustomDataStructs.md)
+  - [模拟开发一个用户注册](swift/learn/userSystem.md)
   - [新手开发者请注意](swift/learn/documetionTips.md)
   - [安全编码指南🧑‍💻](swift/learn/Securitycoding.md)
 
