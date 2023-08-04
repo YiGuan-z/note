@@ -49,7 +49,7 @@
     - [使用ktor创建一个webSocket聊天服务器](kotlin/ktor/chatServer.md)
       - [完整代码](kotlin/ktor/code.md)
     - [使用ktor+graalvm进行二进制编译](kotlin/ktor/graalvmConfigure.md)
-    - [一个即时通讯服务端（施工中）](kotlin/ktor/ImSystemServer.md)
+    - [~~一个即时通讯服务端（施工中）~~](kotlin/ktor/ImSystemServer.md)
   - [kodein-di](kotlin/kodein/learnDI.md)
     - [更多示例](kotlin/kodein/more.md)
   - [ktorm](ktorm/readme.md)
@@ -67,6 +67,7 @@
   - [模拟开发一个用户注册](swift/learn/userSystem.md)
   - [新手开发者请注意](swift/learn/documetionTips.md)
   - [安全编码指南🧑‍💻](swift/learn/Securitycoding.md)
+  - [IOS15](swift/learn/ios15.md)
 
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
