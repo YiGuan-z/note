@@ -155,3 +155,43 @@ struct ListSwipeactionBootcamp: View {
 }
 ```
 
+## badge
+
+```admonish info
+这是一个消息数量指示器🏷️
+
+只能使用在`List`、`Tab bars`、`Menus`中。
+```
+
+```swift
+var body: some View {
+    //List rows
+    //Tab bars
+    //Menus
+    
+    TabView {
+        Color.red
+            .tabItem {
+                Image(systemName: "heart.fill")
+                Text("hello")
+            }
+            .badge(5)
+        
+        Color.green
+            .tabItem {
+                Image(systemName: "heart.fill")
+                Text("hello")
+            }
+            .badge(10)
+        
+        Color.yellow
+            .tabItem {
+                Image(systemName: "heart.fill")
+                Text("hello")
+            }
+            .badge(15)
+    }
+}
+```
+
+## @FocusState
