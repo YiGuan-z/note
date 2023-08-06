@@ -69,6 +69,8 @@
   - [新手开发者请注意](swift/learn/documetionTips.md)
   - [安全编码指南🧑‍💻](swift/learn/Securitycoding.md)
   - [IOS15](swift/learn/ios15.md)
+  - [编码中遇到的问题](swift/learn/bug.md)
+  - [swift高级](swift/learn/swiftAdvanced.md)
 
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)

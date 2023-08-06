@@ -140,6 +140,10 @@ Test
 Test
 ```
 
+```admonish example title="一个隐藏块" collapsible=true
+
+```
+
 ## 将book转化为知识库
 
 将book转化为知识库

@@ -1,0 +1,22 @@
+# 编码中遇到的问题
+
+## Beta版Xcode
+
+我就不该为了Game Porting Toolkit这个东西升级Sonnoma。
+使用新版的代价就是，你创建一个代码文件它就崩溃，你敢创建它就敢崩溃。
+
+我就这样写了一周，想着新版本的Xcode（beta5）应该能解决这个问题，结果新版本Xcode问题更多，无奈，回滚了低版本的测试版。你问我为什么不回滚为14.3.1，因为测试版系统安装了14.3.1也会提示无法使用，需要更新。
+
+最后倒是通过`New Bing`解决了这个问题，它让我使用`defaults`命令对程序进行重置配置。命令如下：
+
+`defaults delete com.apple.dt.Xcode`
+
+虽然重置完确实好多了，但是我又要重新配置Xcode了，这可真是个悲伤的故事。
+
+## Picker的label不显示
+
+这个问题好像是苹果的一个bug来着，不是bug的话我无法理解为什么有label参数但是label中的内容不渲染。
+
+解决方式如下：<https://stackoverflow.com/questions/70835085/picker-label-changing-to-selected-value-swiftui>
+
+使用Menu包裹住Picker，并将label写到Menu中。

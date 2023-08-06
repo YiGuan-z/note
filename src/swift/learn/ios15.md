@@ -158,7 +158,7 @@ struct ListSwipeactionBootcamp: View {
 ## badge
 
 ```admonish info
-这是一个消息数量指示器🏷️
+这是一个提示器
 
 只能使用在`List`、`Tab bars`、`Menus`中。
 ```
@@ -195,3 +195,86 @@ var body: some View {
 ```
 
 ## @FocusState
+
+```admonish info
+@FocuState可以用来切换应用程序的焦点。
+
+例如我们的登陆页面，通常而言程序启动的时候焦点位于用户名输入框就好。
+```
+
+我们也可以手动控制焦点，例如，我们有两个输入框和一个按钮，这时候我们点击按钮对输入框内容检测，如果有哪个条件检测成功，我们就可以设置为对应的程序焦点。
+
+```swift
+struct LoginForm {
+    enum Field: Hashable {
+        case usernameField
+        case passwordField
+    }
+
+
+    @State private var username = ""
+    @State private var password = ""
+    @FocusState private var focusedField: Field?
+
+
+    var body: some View {
+        Form {
+            TextField("Username", text: $username)
+                .focused($focusedField, equals: .usernameField)
+
+
+            SecureField("Password", text: $password)
+                .focused($focusedField, equals: .passwordField)
+
+
+            Button("Sign In") {
+                if username.isEmpty {
+                    focusedField = .usernameField
+                } else if password.isEmpty {
+                    focusedField = .passwordField
+                } else {
+                    handleLogin(username, password)
+                }
+            }
+        }
+    }
+}
+```
+
+## onSubmit & submitLabel
+
+`onSubmit`将会在用户提交一个值的时候执行一个操作
+
+`submitLabel`将会为键盘右下角显示对应的枚举值
+
+例如下面这段代码的键盘显示的是：
+
+```swift
+@State private var currentText=""
+@State private var showAlert = false
+var body: some View {
+    ZStack{
+        Color.purple.ignoresSafeArea()
+        VStack{
+            TextField("请输入提示内容", text: $currentText)
+                .submitLabel(.continue)
+                .onSubmit {
+                    showAlert.toggle()
+                }
+                .background()
+                .cornerRadius(10)
+        }
+        .padding()
+        
+    }
+    .alert(isPresented: $showAlert, content: {
+        Alert(title:Text("这是一条提示消息"),message: Text(currentText))
+    })
+    
+}
+```
+
+```admonish info title="image" collapsible=true
+![image](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202308051536015.jpg)
+```
+
