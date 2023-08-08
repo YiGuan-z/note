@@ -1,6 +1,6 @@
 # 编码中遇到的问题
 
-## [x] Beta版Xcode
+## [√] Beta版Xcode
 
 我就不该为了Game Porting Toolkit这个东西升级Sonnoma。
 使用新版的代价就是，你创建一个代码文件它就崩溃，你敢创建它就敢崩溃。
@@ -13,7 +13,7 @@
 
 虽然重置完确实好多了，但是我又要重新配置Xcode了，这可真是个悲伤的故事。
 
-## [x] Picker的label不显示
+## [√] Picker的label不显示
 
 这个问题好像是苹果的一个bug来着，不是bug的话我无法理解为什么有label参数但是label中的内容不渲染。
 
@@ -21,7 +21,7 @@
 
 使用Menu包裹住Picker，并将label写到Menu中。
 
-## [] Text中使用background移动到屏幕边缘会导致朝向边缘的背景色超出框架
+## [x] Text中使用background移动到屏幕边缘会导致朝向边缘的背景色超出框架
 
 这问题我只有一点点猜测，可能是移动到边缘有吸附效果什么的，因为一旦我添加了`padding`，或者是使用`offset`让其不靠近边缘，它都不会超出，也可以使用不带参数的`frame`，反正我没啥头绪。
 
