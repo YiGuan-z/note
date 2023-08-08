@@ -4,7 +4,7 @@ OK 现在我们走完了初级流程的笔记，现在应该是高级流程了�
 
 说实话，过完初级就能够通过那些内容来简单构建一个App了，对于真正的初学者而言，一个模仿其它App的大致框架基本上没问题，但是我还是感觉有点无从下手。
 
-要怎么构建一个标准的swiftApp，要怎么划分功能模块，如何添加并使用第三方依赖等等。
+要怎么构建一个标准的swiftApp，要怎么使用更多的API来达成我所需要的功能，要怎么划分功能模块，如何添加并使用第三方依赖等等。
 
 所以我又找到了小哥的视频。
 
@@ -387,3 +387,365 @@ struct Trapezoid:Shape{
 }
 ```
 ~~~
+
+## Custom shapes with Ares and Quad Curves
+
+### Arc
+
+前面我们学习了关于直线的操作，现在我们开始学习关于曲线的操作。
+
+让我们先来创建第一个示例，绘制一个圆形。
+
+```swift
+struct ArcSample:Shape{
+    
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            //移动到中心
+            path.move(to: CGPoint(x: rect.midX, y: rect.midY))
+            path.addArc(
+                //弧线的中心就是我们设定的画笔中心
+                center: CGPoint(x: rect.midX, y: rect.midY),
+                radius: rect.height / 2,
+                //开始角度
+                startAngle: Angle(degrees: 0),
+                //结束角度
+                endAngle: Angle(degrees: 360),
+                //指示是否是顺时针方向，对于一个圆来说，这点无所谓。
+                clockwise: false
+            )
+        }
+    }
+    
+}
+```
+
+或许可以拿来做一个饼状图。
+
+将开始角度和结束角度调整为20和-20，你就能够得到一个吃豆人。
+
+我们来画一个子弹头。
+
+```swift
+struct ShapWithArc:Shape{
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            //top left
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            //top right
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            //mid right
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            //bottom
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            //mid left
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            
+        }
+    }
+}
+```
+
+我不想要子弹的下面那么尖，子弹头圆点就好。
+
+添加一条弧线。
+
+提示：
+
+- center就使用该形状的中点即可。
+- 将bottom替换。
+
+~~~admonish example collapsible=true title="先试试嘛"
+```swift
+struct ShapWithArc:Shape{
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            //top left
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            //top right
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            //mid right
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            //bottom            
+            path.addArc(
+                center: CGPoint(x: rect.midX, y: rect.midY),
+                radius: rect.width/2,
+                startAngle: Angle(degrees: 0),
+                endAngle: Angle(degrees: 180),
+                clockwise: false
+            )
+            //mid left
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            
+        }
+    }
+}
+```
+~~~
+
+我们也可以让弧线的y减少一点，让这个形状看起来更圆滑，你可以随意加减乘除，来试试吧。
+
+### QuadCurve
+
+```admonish info
+绘制一个二次贝塞尔曲线。在swift中，它需要一个曲线的终点和曲线的控制点。
+
+[wiki百科](https://zh.wikipedia.org/wiki/%E8%B2%9D%E8%8C%B2%E6%9B%B2%E7%B7%9A)
+
+[知乎](https://zhuanlan.zhihu.com/p/144399638)
+```
+
+```swift
+struct QuatSample: Shape{
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            path.move(to: .zero)
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.maxX, y: rect.maxY),
+                control: CGPoint(x: rect.minX, y: rect.maxY)
+            )
+            path.move(to: .zero)
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.maxX, y: rect.maxY),
+                control: CGPoint(x: rect.maxX, y: rect.minY)
+            )
+        }
+    }
+}
+```
+
+让我们来尝试画一滴💧。
+
+~~~admonish example collapsible=true title="🤔🔫"
+```swift
+struct WatherShape:Shape{
+    //💧
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            //top central
+            path.move(to: CGPoint(x: rect.midX,y:rect.minY))
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.midX, y: rect.maxY),
+                control: CGPoint(x: rect.minX, y: rect.maxY))
+            
+            path.move(to: CGPoint(x: rect.midX,y:rect.minY))
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.midX, y: rect.maxY),
+                control: CGPoint(x: rect.maxX, y: rect.maxY))
+            
+        }
+    }
+}
+```
+~~~
+
+再来尝试一个波浪，像圆润的曲线图一样。
+
+```swift
+struct WatherShape:Shape{
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.midX, y: rect.midY),
+                control: CGPoint(x: rect.width * 0.25, y: rect.height * 0.25)
+            )
+            
+            path.addQuadCurve(
+                to: CGPoint(x: rect.maxX, y: rect.midY),
+                control: CGPoint(x: rect.width * 0.75, y: rect.height * 0.75)
+            )
+            
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+    }
+}
+```
+
+## Custom shapes with AnimateableData
+
+先创建一个小demo
+
+```swift
+struct AnimateableDataBootcamp: View {
+    @State private var animate:Bool = false
+    var body: some View {
+        ZStack{
+            RoundedRectangle(cornerRadius: animate ? 0:25)
+                .frame(width: 250,height: 250)
+                
+            
+        }
+        .onAppear(perform: {
+            withAnimation(.linear(duration: TimeInterval(2)).repeatForever()) {
+                animate.toggle()
+            }
+        })
+    }
+}
+
+#Preview {
+    AnimateableDataBootcamp()
+}
+```
+
+这是一个永远播放下去的动画，但是我们只想要一个角拥有这个动画，这时候就需要用到自定义动画数据了。
+
+```swift
+struct RectangleWithSingleCornerAnimation:Shape{
+    var cornRadius:CGFloat
+    //试试注释掉这段代码，然后观察动画
+    //俺寻思可能是因为这里不是视图层，用不了那一堆状态检查并重构的标注，所以使用属性来代替标注。
+    var animatableData: CGFloat{
+        get{
+            cornRadius
+        }
+        set{
+            cornRadius = newValue
+        }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: .zero)
+            
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - cornRadius))
+            
+            path.addArc(
+                center: CGPoint(x: rect.maxX - cornRadius, y: rect.maxY - cornRadius),
+                radius: cornRadius,
+                startAngle: Angle(degrees: 0),
+                endAngle: Angle(degrees: 360),
+                clockwise: false
+            )
+            
+            path.addLine(to: CGPoint(x: rect.maxX - cornRadius, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+            
+        }
+    }
+}
+```
+
+来尝试制作吃豆人吧。
+
+提示，动画数据应该使用数字
+
+~~~admonish example collapsible=true title="先试试"
+```swift
+struct PacMam:Shape{
+    var offsetAnimation:CGFloat
+    var animatableData: CGFloat{
+        get{
+            offsetAnimation
+        }
+        set{
+            offsetAnimation = newValue
+        }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        Path{ path in
+            path.move(to: CGPoint(x: rect.midX, y: rect.midY))
+            
+            path.addArc(
+                center: CGPoint(x: rect.midX, y: rect.midY),
+                radius: rect.width / 2,
+                startAngle: Angle(degrees: offsetAnimation),
+                endAngle: Angle(degrees: 360 - offsetAnimation),
+                clockwise: false
+            )
+            
+        }
+    }
+}
+```
+~~~
+
+## Generics{{footnote:泛型}}
+
+🤔，这个东西可以去看看swift语法的基础知识。
+
+比较让我高兴的事swift有关联类型，它可以让我们在协议中写一个类型占位符，用着和泛型是没什么区别的。
+
+## @ViewBuilder
+
+```admonish info
+到处对组件的内容进行复制粘贴事，条件判断事麻烦的一件事。
+
+所以我们将一些组件的内容交给调用者来自定义，我们负责我们自己的那一块就好。
+
+@ViewBuilder允许闭包进行视图的构建，在构造方法，方法，属性前使用它。
+```
+
+```swift
+struct HeaderViewGeneric<Content:View>:View {
+    let headerConetnt: Content
+    
+    init(@ViewBuilder headerConetnt: ()->Content) {
+        self.headerConetnt = headerConetnt()
+    }
+    
+    var body: some View {
+        VStack{
+            VStack(alignment:.leading){
+                headerConetnt
+                
+                RoundedRectangle(cornerRadius: 5.0)
+                    .frame(height: 2)
+                
+            }
+            .frame(maxWidth: .infinity,alignment: .leading)
+            .padding()
+            
+            Spacer()
+        }
+    }
+}
+
+struct ViewBuilderBootcamp: View {
+    var body: some View {
+        HeaderViewGeneric {
+            Text("Title")
+                .font(.largeTitle)
+            Text("Description")
+        }
+       
+    }
+}
+
+
+#Preview {
+    ViewBuilderBootcamp()
+}
+
+```
+
+计算属性和方法上使用它。
+
+```swift
+func ignoreSafeArea(color:Color,@ViewBuilder content:()->some View)-> some View{
+        ZStack{
+            color.ignoresSafeArea()
+            content()
+        }
+}
+
+@ViewBuilder private var headerSection : some View{
+    switch type{
+    case .type1:
+        view1
+    case .type2:
+        view2
+    case .type3:
+        view3
+    }
+}
+```
