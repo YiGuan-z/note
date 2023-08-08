@@ -10,10 +10,10 @@ command = "./bin/mdbook-toc"
 renderer = ["html"]
 
 [preprocessor.footnote]
-command = "./bin/mdbook-footnote"
+# command = "./bin/mdbook-footnote"
 
 [preprocessor.admonish]
-command = "./bin/mdbook-admonish"
+# command = "./bin/mdbook-admonish"
 assets_version = "2.0.1" # do not edit: managed by `mdbook-admonish install`
 
 

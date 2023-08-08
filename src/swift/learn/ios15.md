@@ -275,6 +275,8 @@ var body: some View {
 ```
 
 ```admonish info title="image" collapsible=true
+
 ![image](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202308051536015.jpg)
+
 ```
 

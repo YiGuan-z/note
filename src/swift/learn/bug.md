@@ -29,11 +29,14 @@
 
 ```admonish info
 xcode 15.beta5(15A5209g)
+
 Simulators iOS 17.0(21A5291g)
+
 Model: iPhone Xs
 ```
 
 ~~~admonish bug
+
 ```swift
 struct FrameText:View {
     var body: some View {
@@ -46,4 +49,5 @@ struct FrameText:View {
     }
 }
 ```
+
 ~~~
