@@ -24,7 +24,7 @@ jobs:
     runs-on: macos-12
     env:
       MDBOOK_VERSION: 0.4.32
-      ADMONISH_VERSION: 1.10.0
+      ADMONISH_VERSION: 1.10.2
     steps:
       # cargo install mdbook-admonish
       # cargo install mdbook-footnote
