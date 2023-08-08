@@ -749,3 +749,165 @@ func ignoreSafeArea(color:Color,@ViewBuilder content:()->some View)-> some View{
     }
 }
 ```
+
+## PreferenceKey
+
+```admonish info
+它允许子视图向父视图通信，虽然`@Binding`也可以做到这一点，但是他们用途不同。
+
+`@Binding`用于在父子视图中共享数据。如果你想子视图能够读取并修改父视图中的某个值，就可以使用`@Binding`。
+
+而`PrefernceKey`则用于在子视图和父视图之间传递值。当你希望子视图能够将某些消息传递给父视图的时候，就可以使用`PrefernceKey`。
+
+一个用于对值的共享，一个用于子视图单向写入，父视图单向读取。
+```
+
+一个演示demo
+
+```swift
+struct PreferenceKeyBootcamp: View {
+    @State private var text:String = "Hello,world"
+    
+    var body: some View {
+        NavigationView{
+            VStack{
+                SecondaryScreen(text:text)
+                    .navigationTitle("Navigation Title")
+                    
+            }
+            //在选定的key发生改变的时候父视图执行的操作。
+            .onPreferenceChange(CustomPreferenceKey.self,perform: { value in
+                text = value
+            })
+        }
+    }
+}
+
+struct SecondaryScreen:View {
+    let text:String
+    var body: some View {
+        Text(text)
+            //在子视图中，通过key，向父视图进行传递参数。
+            .preference(key: CustomPreferenceKey.self, value: "NEW VALUE")
+    }
+}
+//这是子视图向父视图通知的一个key
+struct CustomPreferenceKey:PreferenceKey{
+    
+    static var defaultValue: String = ""
+    
+    static func reduce(value: inout String, nextValue: () -> String) {
+        value = nextValue()
+    }
+}
+
+#Preview {
+    PreferenceKeyBootcamp()
+}
+```
+
+我们可以像之前使用扩展函数那样对方法进行拓展，每次在子视图中写preference不方便我们对于代码功能的理解。
+
+```swift
+extension View{
+    func customTitle(title:String)->some View{
+        preference(key: CustomPreferenceKey.self, value: title)
+    }
+}
+```
+
+并在子视图中修改。
+
+```swift
+struct SecondaryScreen:View {
+    let text:String
+    var body: some View {
+        Text(text)
+            .customTitle(title: "New value")
+
+    }
+}
+```
+
+这样我们就能够一眼看出这个方法要做什么，而不是去看`CustomPreferenceKey`的定义。
+
+让我们假装从数据库获取数据。
+
+```swift
+struct SecondaryScreen:View {
+    let text:String
+    @State private var newValue = ""
+    var body: some View {
+        Text(text)
+            .onAppear(perform: getTitle)
+            .customTitle(title: newValue)
+
+    }
+    
+    func getTitle(){
+        DispatchQueue.main.asyncAfter(deadline: .now()+5, execute: {
+            self.newValue = "NEW VALUE!!!!!!!"
+        })
+    }
+}
+```
+
+让我们再编写一个demo
+
+```swift
+struct GeometryPreferenceKeyBootcamp: View {
+    
+    @State private var rectSize:CGSize = .zero
+    
+    var body: some View {
+        VStack{
+            Text("Hello, World!")
+                .frame(width: rectSize.width,height: rectSize.height)
+                .background(Color.blue)
+                            
+            Spacer()
+            
+            HStack{
+                //这是一个容器阅读器，它可以返回视图的一些信息，例如大小
+                GeometryReader{ geo in
+                    Rectangle()
+                        .updateRectangleGeoSize(geo.size)
+                }
+                Rectangle()
+                Rectangle()
+            }
+            .frame(height: 55)
+        }
+        .padding()
+        .onPreferenceChange(RectangleGeometrySizePreferenceKey.self, perform: { value in
+            rectSize = value
+        })
+    }
+}
+
+#Preview {
+    GeometryPreferenceKeyBootcamp()
+}
+
+extension View{
+    func updateRectangleGeoSize(_ size:CGSize)->some View{
+        preference(key: RectangleGeometrySizePreferenceKey.self, value: size)
+    }
+}
+
+struct RectangleGeometrySizePreferenceKey:PreferenceKey{
+    static var defaultValue: CGSize = .zero
+    
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
+    }
+}
+```
+
+在这个demo中
+
+我们使用了`GeometryReader`从`Hstack`中获取子视图的大小信息。
+
+通过`RectangleGeometrySizePreferenceKey`将其传递给父视图，父视图接收到信息后将给`rectSize`赋值。
+
+由于`rectSize`是被监听着的，它的变动会导致视图的局部重更新，也就会给我们的`Hello, World!`赋予宽高。
