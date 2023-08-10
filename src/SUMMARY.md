@@ -80,6 +80,7 @@
 # 年度总结
 
 - [2023](Annualsummary/2023.md)
+  - [七月总结](Annualsummary/2023-07.md)
 
 ---
 
