@@ -854,6 +854,12 @@ struct SecondaryScreen:View {
 
 让我们再编写一个demo
 
+我们使用了`GeometryReader`从`Hstack`中获取子视图的大小信息。
+
+通过`RectangleGeometrySizePreferenceKey`将其传递给父视图，父视图接收到信息后将给`rectSize`赋值。
+
+由于`rectSize`是被监听着的，它的变动会导致视图的局部重更新，也就会给我们的`Hello, World!`赋予宽高。
+
 ```swift
 struct GeometryPreferenceKeyBootcamp: View {
     
@@ -904,10 +910,419 @@ struct RectangleGeometrySizePreferenceKey:PreferenceKey{
 }
 ```
 
-在这个demo中
+demo2
 
-我们使用了`GeometryReader`从`Hstack`中获取子视图的大小信息。
+在这个demo中，我们使用ScrollViewOffsetPreferenceKey来向父视图传递坐标数据。
 
-通过`RectangleGeometrySizePreferenceKey`将其传递给父视图，父视图接收到信息后将给`rectSize`赋值。
+并且展示`GeometryReader`的用途之一
 
-由于`rectSize`是被监听着的，它的变动会导致视图的局部重更新，也就会给我们的`Hello, World!`赋予宽高。
+```swift
+struct ScrollViewOffsetPreferenceKey:PreferenceKey{
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+```
+
+```swift
+struct ScrollViewOffsetPreferenceKeyBootcamp: View {
+    let title:String = "New title here"
+    @State private var scrollViewOffset:CGFloat = 0
+    var body: some View {
+        
+        ScrollView {
+            VStack{
+                titleLayer
+                    //在这里让坐标慢慢变透明，因为我的模拟器的启动坐标就为60
+                    //看各位自己展示出来的scrollViewOffset数据。
+                    //也可以写一个bool标识，将第一次获取的坐标存储在另一个变量中
+                    //我就不写了
+                    .opacity(Double(scrollViewOffset) / 60)
+                    .background(
+                        //在这里获取该Text位于titleLayer中的坐标
+                        //会在titleLayer的零点坐标生成这个标签，我们需要全局相对于它的y坐标数据
+                        GeometryReader{ geo in
+                            Text("")
+                                .preference(key: ScrollViewOffsetPreferenceKey.self, value: geo.frame(in: .global).minY)
+                        }
+                    )                    
+                contentLayer
+            }
+            .padding()
+        }
+        .overlay(content: {
+            //调试用
+            Text("\(scrollViewOffset)")
+        })
+        .onPreferenceChange(ScrollViewOffsetPreferenceKey.self, perform: { value in
+            scrollViewOffset = value
+        })
+        .overlay (
+                navBarLayer
+                    .padding(.vertical)
+                    .opacity(scrollViewOffset < 40 ? 1.0 : 0.0)
+                  ,alignment: .top
+        )
+    }
+}
+```
+
+这个版本还是太麻烦，我们可以通过`extension`方法来对坐标获取进行封装。
+
+```swift
+extension View{
+    func onScrollViewOffsetChanged(action:@escaping (_ offset:CGFloat)->Void)->some View{
+        self
+            .background(
+                GeometryReader{ geo in
+                    Text("")
+                        .preference(key: ScrollViewOffsetPreferenceKey.self, value: geo.frame(in: .global).minY)
+                }
+            )
+            .onPreferenceChange(ScrollViewOffsetPreferenceKey.self, perform: { value in
+                action(value)
+            })
+    }
+}
+```
+
+通过一个扩展函数直接完成发送和接收，闭包用于获取内部坐标值。
+
+将刚才的demo优化一下。
+
+```swift
+struct ScrollViewOffsetPreferenceKeyBootcamp: View {
+    let title:String = "New title here"
+    @State private var scrollViewOffset:CGFloat = 0
+    var body: some View {
+        
+        ScrollView {
+            VStack{
+                titleLayer
+                    .opacity(Double(scrollViewOffset) / 60)
+                    .onScrollViewOffsetChanged{ value in
+                        scrollViewOffset = value
+                    }
+                    
+                contentLayer
+            }
+            .padding()
+        }
+        .overlay(content: {
+            Text("\(scrollViewOffset)")
+        })
+        .overlay (
+                navBarLayer
+                    .padding(.vertical)
+                    .opacity(scrollViewOffset < 40 ? 1.0 : 0.0)
+                  ,alignment: .top
+        )
+    }
+}
+```
+
+至此，PreferenceKey完成。
+
+## Custom TabView
+
+系统中自带的`TabView`并不是总能满足我们的要求，我们有时候需要构建一个更符合我们业务的TabBar。
+
+这一节有一点长，我就直接在代码中解释。
+
+在这里，我们使用到了之前定义的泛型，@ViewBuilder，PreferenceKey，MathedGeometryEffect。
+
+~~~admonish example title="AppTabBarView.swift" collapsible=true
+```swift
+import SwiftUI
+
+struct AppTabBarView: View {
+    //这是用于切换系统自带的tab，相关代码可以在扩展方法中的defaultTabView中找到。
+    @State private var selection:String = "home"
+    //这是我们自定义的一个tab枚举里面存储着tab的信息，将可能性收束起来，因为我们的app并不是通用代码。
+    @State private var tabSelection:TabBarItem = .message
+    
+    var body: some View {
+        customTabView1
+    }
+}
+#Preview {
+    AppTabBarView()
+}
+
+extension AppTabBarView{
+    private var defaultTabView:some View{
+        TabView(selection: $selection){
+            Color.red
+                .ignoresSafeArea(.all,edges: .top)
+                .tabItem {
+                    Image(systemName: "message")
+                    Text("消息")
+                }
+            
+            Color.yellow
+                .ignoresSafeArea(.all,edges: .top)
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("联系人")
+                }
+            
+            Color.blue
+                .ignoresSafeArea(.all,edges: .top)
+                .tabItem {
+                    Image(systemName: "circle.square")
+                    Text("动态")
+                }
+        }
+    }
+    
+    private var customTabView1:some View{
+        CustomTabBarContainerView(selection: $tabSelection) {
+            Color.blue
+                .tabBarItem(tab: .message,selection: $tabSelection)
+            Color.red
+                .tabBarItem(tab: .home,selection: $tabSelection)
+            Color.green
+                .tabBarItem(tab:.circle,selection: $tabSelection)
+        }
+    }
+}
+```
+~~~
+
+~~~admonish example title="TabBarItem.swift" collapsible=true
+```swift
+enum TabBarItem:Hashable {
+case home,message,circle
+    //返回系统图标
+    var icon:String{
+        switch self{
+        case .circle:
+            return "circle.dashed"
+        case .home:
+            return "house"
+        case .message:
+            return "message"
+        }
+    }
+    //返回tab标题
+    var titleName:String{
+        switch self{
+        case .circle:
+            return "Circle"
+        case .home:
+            return "home"
+        case .message:
+            return "message"
+        }
+    }
+    //返回tab配色
+    var color:Color{
+        switch self{
+        case .circle:
+            return .green
+        case .home:
+            return .blue
+        case .message:
+            return .red
+        }
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomTabBarContainerView.swift" collapsible=true
+在这里，我们让三个视图叠加在一起，并且从CustomTabBarView中接收一个TabItemPrefernceKey，它会携带一个tabs数组返回给父页面，返回给父页面后，父页面开始对tab进行渲染
+```swift
+struct CustomTabBarContainerView<Content>: View
+where
+    Content:View
+{
+    let content:Content
+    //被选择的Tab
+    @Binding var selection:TabBarItem
+    //所有的tab
+    @State private var tabs:[TabBarItem] = []
+    
+    init(selection: Binding<TabBarItem>, @ViewBuilder content: () -> Content){
+        self.content = content()
+        self._selection = selection
+    }
+    
+    
+    var body: some View {
+        ZStack(alignment:.bottom){
+            content
+                .ignoresSafeArea()
+            CustomTabBarView(tabItems: tabs, selection: $selection)
+        }
+        
+        .onPreferenceChange(TabItemPrefernceKey.self, perform: { value in
+            tabs = value
+        })
+    }
+}
+//测试用的数据
+fileprivate let tabItems:[TabBarItem] = [
+    .message,.home,.circle
+]
+#Preview {
+    
+    CustomTabBarContainerView(selection: .constant(tabItems.first!)) {
+        Color.red
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomTabBarView.swift" collapsible=true
+```swift
+struct CustomTabBarView: View {
+    let tabItems:[TabBarItem]
+    
+    @Binding var selection:TabBarItem
+    //用于动画
+    @Namespace private var namespace
+    
+    var body: some View {
+       tabBar2
+    }
+}
+
+extension CustomTabBarView{
+    private var tabBar1:some View{
+        HStack{
+            ForEach(tabItems,id: \.self){ tab in
+                tabView(tab: tab)
+                    .onTapGesture {
+                        switchToTab(tab: tab)
+                    }
+            }
+        }
+        .padding(6)
+        .background(Color.white.ignoresSafeArea(edges:.bottom))
+    }
+    private func tabView(tab:TabBarItem)->some View{
+        VStack{
+            Image(systemName: tab.icon)
+                .font(.subheadline)
+            
+            Text(tab.titleName)
+                .font(.system(size: 10,weight: .semibold,design: .rounded))
+        }
+        //设置被选中后的前景色
+        .foregroundColor(selection == tab ? tab.color :Color.gray)
+        .padding(.vertical,8)
+        .frame(maxWidth: .infinity)
+        //设置被选中后的渲染的背景色
+        .background(selection == tab ? tab.color.opacity(0.2) : Color.clear)
+        .cornerRadius(10)
+    }
+    
+    
+    private func switchToTab(tab:TabBarItem){
+        withAnimation(.easeInOut) {
+            selection = tab
+        }
+    }
+}
+
+extension CustomTabBarView{
+    
+    private var tabBar2:some View{
+        HStack{
+            ForEach(tabItems,id: \.self){ tab in
+                tabView1(tab: tab)
+                    .onTapGesture {
+                        switchToTab(tab: tab)
+                    }
+            }
+        }
+        .padding(6)
+        .background(Color.white.ignoresSafeArea(edges:.bottom))
+        .cornerRadius(10)
+        //设置阴影，让它有一种立体感
+        .shadow(color: .black.opacity(0.3), radius: 10,x: 0,y: 5)
+        .padding(.horizontal)
+    }
+    private func tabView1(tab:TabBarItem)->some View{
+        VStack{
+            Image(systemName: tab.icon)
+                .font(.subheadline)
+            
+            Text(tab.titleName)
+                .font(.system(size: 10,weight: .semibold,design: .rounded))
+        }
+        //设置前景色
+        .foregroundColor(selection == tab ? tab.color :Color.gray)
+        .padding(.vertical,8)
+        .frame(maxWidth: .infinity)
+        .background(
+            ZStack{
+                //用于设置动画关联
+                if selection == tab{
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(tab.color.opacity(0.2))
+                        .matchedGeometryEffect(id: "background_reteangle", in: namespace)
+                }
+            }
+        )
+        .cornerRadius(10)
+    }
+}
+
+fileprivate let tabItems:[TabBarItem] = [
+    .message,.home,.circle
+]
+
+#Preview {
+    VStack{
+        Spacer()
+        CustomTabBarView(tabItems: tabItems,selection: .constant(tabItems.first!))
+    }
+    
+}
+```
+~~~
+
+~~~admonish example title="TabItemPrefernceKey.swift" collapsible=true
+```swift
+import Foundation
+import SwiftUI
+/// 对数据的底层存储
+struct TabItemPrefernceKey:PreferenceKey{
+    //用于存储TabBarItem数据，该数据将会在CustomTabBarContainerView中使用
+    static var defaultValue: [TabBarItem] = []
+    
+    static func reduce(value: inout [TabBarItem], nextValue: () -> [TabBarItem]) {
+        value += nextValue()
+    }
+}
+/// 对视图的修饰器
+/// 通过对比当前tabBar和当前选中的tabBar是否为同一实例来使用透明度实现视图的切换
+struct TabItemViewModifier:ViewModifier{
+    /// 当前显示的TabBarItem
+    let tab:TabBarItem
+    /// 当前选中的TabBarItem
+    @Binding var selection: TabBarItem
+    
+    func body(content: Content) -> some View {
+        content
+            //控制是否显示
+            .opacity(tab == selection ? 1.0:0.0)
+            //控制是否能够被点击
+            .disabled(!(tab==selection))
+            .preference(key: TabItemPrefernceKey.self, value: [tab])
+    }
+}
+
+extension View{
+    /// 一个TabItemViewModifier的便携方法，由子页面向父页面CustomTabBarContainerView发出preferenceKey请求，CustomTabBarContainerView接收到该请求后就会将tabs数组替换为它
+    func tabBarItem(tab:TabBarItem,selection:Binding<TabBarItem>)->some View{
+        modifier(TabItemViewModifier(tab: tab,selection: selection))
+    }
+}
+```
+~~~
+
+## Custom NavigationView

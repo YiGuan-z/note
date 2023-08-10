@@ -46,7 +46,7 @@ AOP编程的支持，Spring提供面向切面编程，可以在不对原有代�
 
 Spring提供了丰富的数据库访问功能，包括了JDBC、ORM等。
 
-最出名的还是`SpringData Jpa`和`MyBatis`
+最出名的还是`SpringData Jpa`和`MyBatis`(这个算半个ORM)
 
 前者专注于Java类型的依赖关系，后者更注重于XML中的SQL语句，当然它有个升级版本MybatisPlus，它也开始关注起了Java模型，但若是复杂SQL场景，它的处理能力也不错，作为Mybatis的增强，它能够实时检测到XML中SQL语句的修改并实时替换运行的SQL（当前SQL无法替换，仅限下一个）。
 
