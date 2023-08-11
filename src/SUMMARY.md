@@ -74,6 +74,7 @@
 
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
+  - [关于List的快速迭代和@HidesMembers](miscellanies/fastForEach-and-@HideMebers.md)
 
 ---
 
