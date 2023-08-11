@@ -1326,3 +1326,453 @@ extension View{
 ~~~
 
 ## Custom NavigationView
+
+~~~admonish example title="AppNavBarView.swift" collapsible=true
+这个视图用来演示我们的自定义导航
+```swift
+struct AppNavBarView: View {
+    var body: some View {
+        //自定义的导航视图容器
+        CustomNavView {
+            ZStack{
+                Color.green.ignoresSafeArea()
+                VStack{
+                    //自定义的导航链接
+                    CustomNavLink(
+                        destination: Text("我是目标")
+                        //自定义链接目标视图中的标题
+                            .customNavigationBarTitle("我是第二个")
+                    ) {
+                        Text("Hello")
+                        //自定义该视图中的标题
+                            .customNavigation(title: "title",subTitle: "subTitle",hidden: true)
+                    }
+                    
+                }
+            }//ZStack
+            
+        }//CustomNavView
+    }
+}
+
+#Preview {
+    AppNavBarView()
+}
+
+extension AppNavBarView{
+    private var defaultNavView:some View{
+        NavigationView{
+            ZStack{
+                Color.red.ignoresSafeArea()
+                
+                NavigationLink {
+
+                    Text("view2")
+                        .navigationTitle("title2")
+                        .navigationBarBackButtonHidden()
+                } label: {
+                    Text("Navigate")
+                }
+
+            }
+            .navigationTitle("nav title here")
+        }
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomNavView.swift" collapsible=true
+将我们定义的内容，放置在CustomNavBarContainerView视图中，以添加导航栏。
+```swift
+struct CustomNavView<Content:View>: View {
+    
+    let content:Content
+    
+    init(@ViewBuilder content:()-> Content) {
+        self.content = content()
+    }
+    
+    
+    var body: some View {
+        NavigationView{
+            //容器视图，在容器中放置自定义视图
+            CustomNavBarContainerView{
+                content
+            }
+            .navigationBarHidden(true)
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
+    }
+}
+
+#Preview {
+    CustomNavView(){
+        Color.red.ignoresSafeArea()
+    }
+}
+//因为禁用掉导航按键会导致拖拽返回不可用，使用虾米哪方法进行重写即可重新使拖拽返回可用。
+extension UINavigationController{
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = nil
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomNavBarContainerView.swift" collapsible=true
+我们对三个PreferencKey进行监听，一旦发现有对应事件发出，就修改该组件的导航栏对应内容。
+对导航栏和内容进行初始化
+```swift
+struct CustomNavBarContainerView<Content:View>: View {
+    
+    let content:Content
+    
+    @State private var showBackButtom:Bool = true
+    @State private var title:String = ""
+    @State private var subTitle:String? = nil
+    
+    init(@ViewBuilder contentScope:()->Content) {
+        self.content = contentScope()
+    }
+    
+    var body: some View {
+        VStack(spacing:0){
+            //我是导航栏
+            CustomNavBarView(showBackButtom: showBackButtom, title: title, subTitle: subTitle)
+            //我是内容
+            content
+                .frame(maxWidth: .infinity,maxHeight: .infinity)
+        }
+        .onPreferenceChange(CustomNavBarTitlePreferenceKey.self, perform: { value in
+            title = value
+        })
+        .onPreferenceChange(CustomNavBarSubTitlePreferenceKey.self, perform: { value in
+            subTitle = value
+        })
+        .onPreferenceChange(CustomNavBarBackButtonHiddenPreferenceKey.self, perform: { value in
+            showBackButtom = !value
+        })
+    }
+}
+
+#Preview {
+    CustomNavBarContainerView(){
+        ZStack{
+            Color.green.ignoresSafeArea()
+            Text("Hello")
+                .foregroundColor(.white)
+        }
+        .customNavigationBarTitle("title")
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomNavBarPreferenceKeys.swift" collapsible=true
+三个key的定义和它对应的使用方法
+```swift
+
+struct CustomNavBarTitlePreferenceKey:PreferenceKey{
+    static var defaultValue: String = ""
+    static func reduce(value: inout String, nextValue: () -> String) {
+        value = nextValue()
+    }
+}
+
+struct CustomNavBarSubTitlePreferenceKey:PreferenceKey{
+    static var defaultValue: String? = nil
+    
+    static func reduce(value: inout String?, nextValue: () -> String?) {
+        value = nextValue()
+    }
+}
+
+struct CustomNavBarBackButtonHiddenPreferenceKey:PreferenceKey{
+    static var defaultValue: Bool = false
+    
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = nextValue()
+    }
+}
+
+extension View{
+    
+    func customNavigationBarTitle(_ title:String)->some View{
+        self.preference(key: CustomNavBarTitlePreferenceKey.self, value: title)
+    }
+    
+    func customNavigationBarSubTitle(_ title:String?)->some View{
+        self.preference(key: CustomNavBarSubTitlePreferenceKey.self, value: title)
+    }
+    
+    func customNavigationBarBackButtonHidden(_ hidden:Bool)->some View{
+        self.preference(key: CustomNavBarBackButtonHiddenPreferenceKey.self, value: hidden)
+    }
+    
+    func customNavigation(title:String = "",subTitle:String? = nil, hidden:Bool = false) ->some View{
+        self
+            .customNavigationBarTitle(title)
+            .customNavigationBarSubTitle(subTitle)
+            .customNavigationBarBackButtonHidden(hidden)
+    }
+    
+}
+```
+~~~
+
+~~~admonish example title="CustomNavBarView.swift" collapsible=true
+这里主要定义了导航栏的样式，如果有更多想要定义的，可以在这里添加。
+```swift
+struct CustomNavBarView: View {
+    
+    let showBackButtom:Bool
+    
+    let title:String
+    
+    let subTitle:String?
+    
+    @Environment(\.presentationMode) private var  presentationMode
+    var body: some View {
+        HStack{
+            if showBackButtom{
+                backButtom
+            }
+            Spacer()
+            
+            titleSection
+            
+            Spacer()
+            if showBackButtom{
+                backButtom
+                    .opacity(0)
+            }
+        }
+        .padding()
+        .font(.headline)
+        .foregroundColor(.white)
+        .accentColor(.white)
+        .background(Color.blue)
+    }
+}
+
+#Preview {
+    VStack{
+        CustomNavBarView(showBackButtom: true, title: "title", subTitle: "subTitle")
+        Spacer()
+    }
+}
+
+extension CustomNavBarView{
+    private var backButtom:some View{
+        Button {
+            presentationMode.wrappedValue.dismiss()
+        } label: {
+            Image(systemName: "chevron.left")
+        }
+    }
+    
+    private var titleSection:some View{
+        VStack(spacing:4){
+            Text(title)
+                .font(.title)
+                .fontWeight(.semibold)
+            if let subTitle{
+                Text(subTitle)
+            }
+        }
+    }
+}
+```
+~~~
+
+~~~admonish example title="CustomNavLink.swift" collapsible=true
+```swift
+struct CustomNavLink<Label:View,Destination:View>: View {
+    let destination:Destination
+    let label:Label
+    
+    init(destination:Destination,@ViewBuilder label:()->Label){
+        self.destination = destination
+        self.label = label()
+    }
+    
+    var body: some View {
+        NavigationLink {
+            //将destination也放入容器视图中
+            CustomNavBarContainerView {
+                destination
+            }
+            .navigationBarHidden(true)
+        } label: {
+            label
+        }//navigationLink
+        
+    }
+}
+
+#Preview {
+    CustomNavView {
+        CustomNavLink(destination: Text("destination")) {
+            Text("customNavLink")
+        }
+    }
+}
+```
+~~~
+
+## Use UIViewRepresentable to convert UIKit views to SwiftUI
+
+```admonish info
+由于SwiftUI是一个新东西，所以它里面有一些视图可能还未成熟，所以我们可以使用以前的UIKit视图。
+
+`UIViewRepresentable`就是帮助在SwiftUI中使用UIKit的一个协议。
+```
+
+例如我们平常使用的`TextField`的提示字体颜色就无法更改，这就可以请出我们的UIKit来自定义了，因为它的可以修改。
+
+```swift
+struct UIViewRepresetableBootcamp: View {
+    @State private var text:String = ""
+    var body: some View {
+        VStack{
+            Text("test...")
+            TextField("please input", text: $text)
+                .frame(height: 55)
+                .background(Color.gray)
+            UITextFieldViewRepresentable()
+                .frame(height: 55)
+                .background(Color.gray)
+        }
+    }
+}
+
+#Preview {
+    UIViewRepresetableBootcamp()
+}
+
+struct UITextFieldViewRepresentable:UIViewRepresentable{
+    func makeUIView(context: Context) -> some UIView {
+        let textField =  UITextField(frame: .zero)
+        let placeholder = NSAttributedString(
+            string: "please input...",
+            attributes: [
+                .foregroundColor : UIColor.red
+            ]
+        )
+        textField.attributedPlaceholder = placeholder
+        return textField
+    }
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        
+    }
+}
+
+struct BasicUIViewRepresentable:UIViewRepresentable{
+    func makeUIView(context: Context) -> some UIView {
+        let view = UIView()
+        view.backgroundColor = .red
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        
+    }
+    
+}
+```
+
+现在，我们需要将UIKit的输入框的结果值取出即可。
+
+不太明白为什么无法拿到外部结构体的变量，难道因为一个是结构体一个是class？
+
+```swift
+struct UITextFieldViewRepresentable:UIViewRepresentable{
+    let prompt:String
+    
+    let foregroundColor:UIColor
+    //需要将传进来的Binding交给Coordinator
+    @Binding var text:String
+    
+    init(prompt: String, foregroundColor: UIColor = .gray,text:Binding<String>) {
+        self.prompt = prompt
+        self.foregroundColor = foregroundColor
+        self._text = text
+    }
+    
+    func makeUIView(context: Context) -> some UIView {
+        let textField = getTextField()
+        textField.delegate = context.coordinator
+        return textField
+    }
+
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        
+    }
+    
+    private func getTextField() ->UITextField{
+        let textField =  UITextField(frame: .zero)
+        let placeholder = NSAttributedString(
+            string: prompt,
+            attributes: [
+                .foregroundColor : foregroundColor,
+            ]
+        )
+        textField.attributedPlaceholder = placeholder
+        return textField
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        //将绑定传递给协调器
+        return Coordinator(text: $text)
+    }
+    //定义了UITextField里遇到一些事件后的操作。
+    //将数据发送给SwiftUI
+    class Coordinator:NSObject,UITextFieldDelegate{
+        @Binding var text:String
+        
+        init(text:Binding<String>) {
+            self._text = text
+        }
+        
+        func textFieldDidChangeSelection(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+    }
+    
+}
+```
+
+这时候我们测试就会发现一些问题。
+
+我们在UIKit中的输入可以正确发送给SwiftUI，但是我们在SwiftUI中的更新不会被传递给UIKit，这是怎么回事呢？
+
+哦，因为我没有配置`updateUIView`方法，这个方法将数据从SwiftUI发送给UIKit。
+
+让我们添加上数据更新方法
+
+注意:makeUIView的返回值需要更改为UITextField，不需要返回不透明类型了，因为我们编写的组件很确定类型。
+
+```swift
+func updateUIView(_ uiView: UITextField, context: Context) {
+    uiView.text = self.text
+}
+```
+
+这样数据就能够进行双向发送/接收了。
+
+我们还可以以新增一个修改提示符的功能。
+
+先将`prompt`的变量修改为`var`，然后写入下面方法。
+
+```swift
+func changePrompt(_ text:String)->UITextFieldViewRepresentable{
+    var textFieldViewRepresentable = self
+    textFieldViewRepresentable.prompt = text
+    return textFieldViewRepresentable
+}
+```
+
+为什么不直接使用self进行修改呢？因为这是结构体，除了突变方法是不允许结构体内变量修改的。
+所以我们把实例复制了一份出来，修改后返回。
