@@ -81,3 +81,9 @@ fun testFastForEach(){
 
 ![成功代码](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202308112058764.jpg)
 
+|屏蔽短语|屏蔽效果|
+|:---:|:---:|
+|INVISIBLE_MEMBER|可以调用私有成员和跨模块`internal`成员|
+|INVISIBLE_REFERENCE|强制使用一个不可见的类|
+|MemberVisibilityCanBePrivate|用于抑制关于将成员可见性私有化的建议|
+|UNCHECKED_CAST|抑制泛型建议|

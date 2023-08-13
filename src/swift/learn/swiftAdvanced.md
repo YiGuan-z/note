@@ -1776,3 +1776,164 @@ func changePrompt(_ text:String)->UITextFieldViewRepresentable{
 
 为什么不直接使用self进行修改呢？因为这是结构体，除了突变方法是不允许结构体内变量修改的。
 所以我们把实例复制了一份出来，修改后返回。
+
+## UIViewControllerRepresentable
+
+```admonish info
+它允许在SwiftUI中使用UIKit的视图控制器。
+```
+
+示例代码
+
+```swift
+struct UIViewControllerRepresentableBootcamp: View {
+    @State private var showScreen:Bool = false
+    var body: some View {
+        VStack{
+            Text("hi")
+            
+            Button {
+                showScreen.toggle()
+            } label: {
+                Text("Click me")
+            }
+            .sheet(isPresented: $showScreen, content: {
+                BasicUIViewControllerRepresentable(labelText: "你好")
+            })
+
+        }
+    }
+}
+
+#Preview {
+    UIViewControllerRepresentableBootcamp()
+}
+
+struct BasicUIViewControllerRepresentable:UIViewControllerRepresentable {
+    let labelText:String
+    
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let vc = MyFirstViewController()
+        
+        vc.labelText = labelText
+        
+        return vc
+    }
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
+        
+    }
+    
+}
+
+class MyFirstViewController:UIViewController{
+    var labelText:String = "starting value"
+    
+    override func viewDidLoad() {
+        view.backgroundColor = .blue
+        
+        let label = UILabel()
+        label.text = labelText
+        label.textColor = .white
+        
+        view.addSubview(label)
+        
+        label.frame = view.frame
+    }
+}
+```
+
+由我看来，这应该是由`UIViewController`定义某一组件的控制器，`UIViewControllerRepresentable`定义的是将控制器进一步组合起来的一个具体逻辑，就像我们在`View`中一直重写的`body`一样。
+
+```admonish info title="注意"
+`updateUIViewController`方法从SwiftUI获取数据并传递给UIKit的方法。
+
+`makeCoordinator`里的`coordinator`负责将UIKit的数据回传给SwiftUI。
+```
+
+让我们使用`UIImagePickerController`来编写一个案例。
+
+这里的逻辑是，当我们点击一下按钮，就弹出一个图像选择器，选择完成后将图像显示在屏幕上。
+
+```swift
+@State private var showScreen:Bool = false
+@State private var image:UIImage? = nil
+
+var body: some View {
+    VStack{
+        Text("hi")
+        
+        if let image {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 250,height: 250)
+        }
+        
+        Button {
+            showScreen.toggle()
+        } label: {
+            Text("Click me")
+        }
+        .sheet(isPresented: $showScreen, content: {
+            UIImagePickerControllerRepresentable(image: $image,showScreen: $showScreen)
+        })
+        
+        
+    }
+}
+```
+
+这是`UIImagePickerControllerRepresentable`，我们在`makeUIViewController`里对视图进行组装。
+
+我们将`UIImagePickerController`的一系列动作委托给我们自己的`Coordinator`。
+
+在我们自己的`Coordinator`中，就可以对它的一系列事件进行定义。
+
+我们在这里重写了`imagePickerController`方法，两个参数的那个，第二个它回携带一个字典进来，我们需要的是那个字典。
+
+在`Coordinator`中，我们完成了图像的回传。
+
+这样，我们就可以在SwiftUI中进行图片的展示了。
+
+```swift
+struct UIImagePickerControllerRepresentable:UIViewControllerRepresentable{
+    @Binding var image:UIImage?
+    @Binding var showScreen:Bool
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let vc = UIImagePickerController()
+        
+        vc.allowsEditing = false
+        vc.delegate = context.coordinator
+        
+        return vc
+    }
+    
+    // from SwiftUI to UIKit
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
+        
+    }
+    
+    // from UIKit to SwiftUI
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(image:$image,showScreen: $showScreen)
+    }
+    
+    class Coordinator: NSObject, UIImagePickerControllerDelegate,UINavigationControllerDelegate{
+        
+        @Binding var image:UIImage?
+        @Binding var showShreen:Bool
+        
+        init(image: Binding<UIImage?>,showScreen:Binding<Bool>) {
+            self._image = image
+            self._showShreen = showScreen
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+            guard let image = info[.originalImage] as? UIImage else{return}
+            self.image = image
+            showShreen = false
+        }
+    }
+}
+```
