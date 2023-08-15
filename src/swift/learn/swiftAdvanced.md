@@ -1937,3 +1937,103 @@ struct UIImagePickerControllerRepresentable:UIViewControllerRepresentable{
     }
 }
 ```
+
+## Protocols
+
+```admonish info
+可以看作kotlin的interface，可以对属性和方法进行约束（Java也可以约束属性，只是没有和方法区分开来，kt就做到了这一点）。
+可以使用类型别名来对协议进行组合。
+`typealias newProtocols = Protocols1 & Protocols2`
+```
+
+让我们来看一个情景demo
+
+```swift
+struct DefaultColorTheme{
+    let primary:Color = .blue
+    let secondary:Color = .white
+    let tertiary:Color = .gray
+}
+
+struct ProtocolsBootcamp: View {
+    let colorTheme:DefaultColorTheme = DefaultColorTheme()
+    var body: some View {
+        ZStack{
+            colorTheme.tertiary
+                .ignoresSafeArea()
+            
+            Text("Protocols are awsome!")
+                .font(.headline)
+                .foregroundColor(colorTheme.secondary)
+                .padding()
+                .background(colorTheme.primary)
+                .cornerRadius(10)
+        }
+    }
+}
+
+#Preview {
+    ProtocolsBootcamp()
+}
+```
+
+我们在这里构建了一个App页面，如果我们想要切换这个页面的主题色，我们可以简单的将`DefaultColorTheme`结构体中的颜色进行修改，但是如果我们想要对
+不同的用户展示不同的颜色呢？
+
+你可能会想到将修饰符修改为`var`，然后将不同颜色的配置存储在其它地方。
+
+我们不可能真的将修饰符修改为var，因为这会意味着颜色在运行时会被其它地方修改，你可以相信你自己的代码，但是你不能相信别人的代码，你永远都想不到你的同事会想出什么奇葩的办法。
+
+那么把颜色存储在其它地方，我们可以创建一个结构体。
+
+```swift
+struct AlternativeColorTheme{
+    let primary:Color = .red
+    let secondary:Color = .green
+    let tertiary:Color = .blue
+}
+```
+
+这样做的话，我们就需要将`colorTheme`变量的类型和赋值修改为我们刚刚创建的`AlternativeColorTheme`结构体。
+
+这非常不方便，这时候就需要使用到我们所提到的`protocols`了。
+
+我们声明以下协议
+
+```swift
+protocol ColorThemeProtocol {
+    var primary:Color { get }
+    var secondary:Color { get }
+    var tertiary:Color { get }
+}
+```
+
+在这里我们只能使用`var`进行修饰，只添加`get`方法，因为`let`常量在协议中无法使用。
+
+我们在结构体声明后添加上我们刚刚编写的协议。
+
+```swift
+struct DefaultColorTheme :ColorThemeProtocol{
+    let primary:Color = .blue
+    let secondary:Color = .white
+    let tertiary:Color = .gray
+}
+
+struct AlternativeColorTheme : ColorThemeProtocol{
+    let primary:Color = .red
+    let secondary:Color = .green
+    let tertiary:Color = .blue
+}
+
+protocol ColorThemeProtocol {
+    var primary:Color { get }
+    var secondary:Color { get }
+    var tertiary:Color { get }
+}
+```
+
+再将`colorTheme`变量的类型修改为`ColorThemeProtocol`。
+
+这样就能将赋值修改为所有实现了`ColorThemeProtocol`协议的结构体或者类。
+
+也可以让`init`来初始化`colorTheme`变量。
