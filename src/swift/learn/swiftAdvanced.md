@@ -1625,6 +1625,8 @@ struct CustomNavLink<Label:View,Destination:View>: View {
 ## Use UIViewRepresentable to convert UIKit views to SwiftUI
 
 ```admonish info
+使用`UIViewControllerRepresentable`将UIKit转换为SwiftUI
+
 由于SwiftUI是一个新东西，所以它里面有一些视图可能还未成熟，所以我们可以使用以前的UIKit视图。
 
 `UIViewRepresentable`就是帮助在SwiftUI中使用UIKit的一个协议。
@@ -2037,3 +2039,579 @@ protocol ColorThemeProtocol {
 这样就能将赋值修改为所有实现了`ColorThemeProtocol`协议的结构体或者类。
 
 也可以让`init`来初始化`colorTheme`变量。
+
+## Use Dependency Injection in SwiftUI
+
+```admonish info
+依赖注入其实是一个老生常谈的问题了，我们需要将依赖统一在一个地方提供给我们的应用程序，同时，应用程序也能从注入程序中获取到对应的代码依赖。
+总的来说，算个生产者消费者问题。
+```
+
+我们先编写一个demo，它使用了一个测试的API:<https://jsonplaceholder.typicode.com>里的posts选项。
+
+将Api的内容渲染到屏幕上。
+
+我们编写了数据模型`PostsModel`和对应的数据服务`ProductionDataService`来对数据的CURD{{footnote:增删查改}}进行操作，并且我们将操作放入到`DependencyInjectionViewModel`中，它用于在视图上展示数据。
+
+这时候，依赖的创建和传递都是我们手动来进行操作的，并且，如果你在多个位置同时访问了`ProductionDataService`那么就会造成多线程同时访问一个没有加锁的实例，可能导致数据竞争和一堆数据不一致问题，进而导致应用程序的崩溃。
+
+如果我们使用单例的话，那么就无法对它的初始化参数进行修改，它只会有一个初始化参数，并且在程序启动时就准备好了，当然你也可以做多个静态实例，但是得加锁。
+
+我们无法将数据服务替换为其它的数据服务，可能这个数据服务的来源是MySQL，那个数据来源是模拟程序，突然想要切换为其它来源。
+
+```swift
+import SwiftUI
+import Combine
+
+struct PostsModel:Identifiable,Decodable{
+    /*
+     {
+        "userId": 1,
+        "id": 1,
+        "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+        "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+      },
+     */
+    let userId: Int
+    let id: Int
+    let title: String
+    let body: String
+}
+
+class ProductionDataService{
+    static let instance = ProductionDataService()
+    
+    let url:URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
+    
+    func getData()->AnyPublisher<[PostsModel],Error>{
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map({ response in
+                response.data
+            })
+            .decode(type: [PostsModel].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+}
+
+class DependencyInjectionViewModel:ObservableObject{
+    @Published var dataArray:[PostsModel] = []
+    var cancellables = Set<AnyCancellable>()
+    
+    init(){
+        loadPosts()
+    }
+    
+    private func loadPosts(){
+        ProductionDataService.instance.getData()
+            .sink { _ in
+                
+            } receiveValue: {[weak self] value in
+                self?.dataArray += value
+            }
+            .store(in: &cancellables)
+
+    }
+}
+
+struct DependencyInjectionBootcamp: View {
+    @StateObject private var vm = DependencyInjectionViewModel()
+    var body: some View {
+        ScrollView{
+            VStack(alignment:.leading){
+                ForEach(vm.dataArray){ post in
+                    Text(post.title)
+                }
+            }            
+        }
+    }
+}
+
+#Preview {
+    DependencyInjectionBootcamp()
+}
+```
+
+接着我们将它修改为最初的依赖传递设计
+
+```swift
+import SwiftUI
+import Combine
+
+struct PostsModel:Identifiable,Decodable{
+    let userId: Int
+    let id: Int
+    let title: String
+    let body: String
+}
+
+class ProductionDataService{
+    
+    let url:URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
+    
+    func getData()->AnyPublisher<[PostsModel],Error>{
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map({ response in
+                response.data
+            })
+            .decode(type: [PostsModel].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+}
+
+class DependencyInjectionViewModel:ObservableObject{
+    @Published var dataArray:[PostsModel] = []
+    var cancellables = Set<AnyCancellable>()
+    let dataService:ProductionDataService
+    
+    init(dataService:ProductionDataService){
+        self.dataService = dataService
+        loadPosts()
+    }
+    
+    private func loadPosts(){
+        dataService.getData()
+            .sink { _ in
+                
+            } receiveValue: {[weak self] value in
+                self?.dataArray += value
+            }
+            .store(in: &cancellables)
+
+    }
+}
+
+struct DependencyInjectionBootcamp: View {
+    @StateObject private var vm:DependencyInjectionViewModel
+    
+    init(dataService: ProductionDataService) {
+        self._vm = StateObject(wrappedValue: DependencyInjectionViewModel(dataService: dataService))
+    }
+    var body: some View {
+        ScrollView{
+            VStack(alignment:.leading){
+                ForEach(vm.dataArray){ post in
+                    Text(post.title)
+                }
+            }
+        }
+    }
+}
+
+fileprivate let dataService = ProductionDataService()
+#Preview {
+    DependencyInjectionBootcamp(dataService: dataService)
+}
+```
+
+这种设计非常消耗人的精力，因为一层一层向下传递的时候可能会误传一些什么东西，尤其是在视图层创建服务层的依赖，当它与视图依赖混在一起的时候，你不得不花出时间来进行整理。（不要相信你同事的代码，除非技术够强）。
+
+将注入的服务切换为我们自定义的服务`protocol`
+
+```swift
+protocol DataServiceProtocol {
+    func getData() ->AnyPublisher<[PostsModel],Error>
+}
+```
+
+接下来编写一个模拟数据来源
+
+```swift
+class MockDataService:DataServiceProtocol{
+    let testData:[PostsModel] = [
+    PostsModel(userId: 1, id: 1, title: "测试帖子1", body: "这是一条测试内容1"),
+    PostsModel(userId: 2, id: 2, title: "测试帖子2", body: "这是一条测试内容2"),
+    PostsModel(userId: 3, id: 3, title: "测试帖子3", body: "这是一条测试内容3"),
+    PostsModel(userId: 4, id: 4, title: "测试帖子4", body: "这是一条测试内容4"),
+    ]
+    
+    func getData() -> AnyPublisher<[PostsModel], Error> {
+        Just(testData)
+            .tryMap({$0})
+            .eraseToAnyPublisher()
+    }   
+}
+```
+
+接着将一切用到了`ProductionDataService`的地方修改为`DataServiceProtocol`类型。
+
+完整代码如下：
+
+```swift
+struct PostsModel:Identifiable,Decodable{
+    let userId: Int
+    let id: Int
+    let title: String
+    let body: String
+}
+
+class ProductionDataService:DataServiceProtocol{
+    
+    let url:URL
+    init(url: URL) {
+        self.url = url
+    }
+    
+    func getData()->AnyPublisher<[PostsModel],Error>{
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map({ response in
+                response.data
+            })
+            .decode(type: [PostsModel].self, decoder: JSONDecoder())
+            .receive(on: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+}
+
+protocol DataServiceProtocol {
+    func getData() ->AnyPublisher<[PostsModel],Error>
+}
+
+class DependencyInjectionViewModel:ObservableObject{
+    @Published var dataArray:[PostsModel] = []
+    var cancellables = Set<AnyCancellable>()
+    let dataService:DataServiceProtocol
+    
+    init(dataService:DataServiceProtocol){
+        self.dataService = dataService
+        loadPosts()
+    }
+    
+    private func loadPosts(){
+        dataService.getData()
+            .sink { _ in
+                
+            } receiveValue: {[weak self] value in
+                self?.dataArray += value
+            }
+            .store(in: &cancellables)
+
+    }
+}
+
+class MockDataService:DataServiceProtocol{
+    let testData:[PostsModel] = [
+    PostsModel(userId: 1, id: 1, title: "测试帖子1", body: "这是一条测试内容1"),
+    PostsModel(userId: 2, id: 2, title: "测试帖子2", body: "这是一条测试内容2"),
+    PostsModel(userId: 3, id: 3, title: "测试帖子3", body: "这是一条测试内容3"),
+    PostsModel(userId: 4, id: 4, title: "测试帖子4", body: "这是一条测试内容4"),
+    ]
+    
+    func getData() -> AnyPublisher<[PostsModel], Error> {
+        Just(testData)
+            .tryMap({$0})
+            .eraseToAnyPublisher()
+    }
+    
+    
+}
+
+struct DependencyInjectionBootcamp: View {
+    @StateObject private var vm:DependencyInjectionViewModel
+    
+    init(dataService: DataServiceProtocol) {
+        self._vm = StateObject(wrappedValue: DependencyInjectionViewModel(dataService: dataService))
+    }
+    var body: some View {
+        ScrollView{
+            VStack(alignment:.leading){
+                ForEach(vm.dataArray){ post in
+                    Text(post.title)
+                }
+            }
+        }
+    }
+}
+
+fileprivate struct PreViewData{
+    static let remoteUrl=URL(string: "https://jsonplaceholder.typicode.com/posts")
+    static let dataService = ProductionDataService(url: remoteUrl!)
+    static let mockDataService = MockDataService()
+}
+
+#Preview {
+    DependencyInjectionBootcamp(dataService: PreViewData.mockDataService)
+}
+```
+
+我们也可以对MockDataService进行改造，让它不仅限于那些数据。
+
+```swift
+class MockDataService:DataServiceProtocol{
+    let testData:[PostsModel]
+    
+    init(testData: [PostsModel]? = nil) {
+        self.testData = testData ?? [
+            PostsModel(userId: 1, id: 1, title: "测试帖子1", body: "这是一条测试内容1"),
+            PostsModel(userId: 2, id: 2, title: "测试帖子2", body: "这是一条测试内容2"),
+            PostsModel(userId: 3, id: 3, title: "测试帖子3", body: "这是一条测试内容3"),
+            PostsModel(userId: 4, id: 4, title: "测试帖子4", body: "这是一条测试内容4"),
+        ]
+    }
+    
+    func getData() -> AnyPublisher<[PostsModel], Error> {
+        Just(testData)
+            .tryMap({$0})
+            .eraseToAnyPublisher()
+    }
+}
+```
+
+事实上，视频中的依赖注入有点出乎我的意料，我以为他会用`@EnvironmentObject`来对各个组件的依赖进行提供，但他是通过参数的传递来完成依赖注入。
+并且末尾让我们使用一个模块集来对依赖进行注入（就是自己建立一个环境，用`class`在里面将依赖项目初始化完毕，每个模块都会有一个自己的环境）。
+
+我们可以用`@EnvironmentObject`来对模块依赖进行自动注入，不用手动传递，子页面通过使用不同模块寻找到自己的依赖。
+
+还是比较好奇为什么不使用`@EnvironmentObject`。
+
+## Test
+
+```admonish info
+测试分为两种，一种为**单元测试**，一种为**UI测试**。
+
+- 单元测试用于测试应用程序的底层逻辑。
+
+- UI测试用于测试应用程序的UI是否符合预期。
+
+最经常编写的还是单元测试，因为单元测试能够测试除了UI以外的一切东西。
+```
+
+### Unit Testing
+
+```admonish info
+单元测试非常重要，它决定了应用程序逻辑是否按照我们预期的规则来进行执行。
+
+如果执行结果不是预期操作，那么就是代码中哪里有bug，需要我们对其进行检查。
+```
+
+首先，我们需要创建一个target如果有test Target的话，就不需要再重复创建。路径为`File -> New -> Target`，在里面选择`Unit Testing Bundle`。
+
+输入你要创建的test包信息，点击finish即可创建一个测试包。
+
+在测试文件中的方法名也有一套命名规则，开头为test的方法都可以运行测试，开头没有test的方法是不会进行测试的。
+
+苹果官方为了防止我们看不懂测试逻辑，在创建测试的模版文件中留下了大量注释，英文不好的可以通过翻译来看看。
+
+关于测试的命名，可以使用test_UnitOfWork{{footnote:被测试的结构体或类}}_StateUnderTest{{footnote:被测试的变量或方法}}_ExpectedBehavior{{footnote:预期结果的检查}}
+
+下面是示例代码
+
+UnitTestingBootcampView.swift
+
+```swift
+struct UnitTestingBootcampView: View {
+    @StateObject private var vm:UnitTestingViewModel
+    
+    init(isPremium:Bool) {
+        self._vm = StateObject(wrappedValue: UnitTestingViewModel(isPremium: isPremium))
+    }
+    
+    var body: some View {
+        Text(vm.isPremium.description)
+    }
+}
+
+#Preview {
+    UnitTestingBootcampView(isPremium: true)
+}
+```
+
+UnitTestingViewModel.swift
+
+```swift
+class UnitTestingViewModel:ObservableObject{
+    @Published var isPremium : Bool
+    
+    init(isPremium: Bool) {
+        self.isPremium = isPremium
+    }
+    
+}
+```
+
+编写测试方法名，我们需要测试`UnitTestingViewModel`中的`isPremium`变量。
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeTrue(){
+        
+}
+```
+
+阅读方法名我们就可以得知，我们在测试一个UnitTestingBootcamp中的视图模型里的isPremium变量是否为true。
+
+在测试方法的内部可以使用三个步骤进行测试，分别是 Given{{footnote:给定的操作}}, When{{footnote:在对应模块中应用}}, Then{{footnote:检测是否符合预期}}
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeTrue(){
+    //Given
+    
+    //When
+    
+    //Then
+}
+```
+
+如果在测试中找不到我们想要测试的目标，可能是我们没有导包的缘故。
+
+使用`@testable import your package`就可以导入你需要测试的包并对它进行测试。
+
+```admonish info title="@testable" collapsible=true
+`@testable`关键字用于在单元测试中导入需要测试的模块。它可以让你在单元测试中访问程序的内部实体，在保持封装性的情况下进行更好的测试。
+```
+
+让我们编写具体的测试方法
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeTrue(){
+    //Given
+    let usersIsPremium:Bool = true
+    //When
+    let vm = UnitTestingViewModel(isPremium: usersIsPremium)
+    //Then
+    XCTAssertTrue(vm.isPremium)
+}
+```
+
+点击方法左边的运行按钮，即可开始对其进行测试。
+
+现在，我们可以给UnitTestingViewModel里的`isPremium`取反，再点击测试看看其效果。
+
+同时，我们也可以填入错误信息。
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeTrue(){
+    //Given
+    let usersIsPremium:Bool = true
+    //When
+    let vm = UnitTestingViewModel(isPremium: usersIsPremium)
+    //Then
+    XCTAssertTrue(vm.isPremium,"预期为true")
+}
+```
+
+顺带一提，按下option和esc就可以查看参数和重载方法。
+
+我们再来测试一下为`IsPremium`为false的情况。
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeFalse(){
+    //Given
+    let usersIsPremium:Bool = false
+    //When
+    let vm = UnitTestingViewModel(isPremium: usersIsPremium)
+    //Then
+    XCTAssertFalse(vm.isPremium,"预期为false")
+}
+```
+
+测试入个门就是如此简单。
+
+当然，之检测给定值是不行的，我们还要进行随机检测。
+
+让用户随机给个true或false，我们检查vm中的结果和用于给予的是否相同。
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeInjectedValue(){
+    //Given
+    let usersIsPremium:Bool = Bool.random()
+    //When
+    let vm = UnitTestingViewModel(isPremium: usersIsPremium)
+    //Then
+    XCTAssertEqual(usersIsPremium, vm.isPremium,"预期结果应该是\(usersIsPremium.description)")
+}
+```
+
+由于改方法它只会运行一次，就只会检测一次结果，就相当于我们运行了一次检测true或false的方法。现在假设我们只有这一个检查注入值的方法，我们没有什么检查true和false的测试方法，需要对它的所有结果进行测试。这时候，我们就可以使用for循环，手动来对方法进行循环检测。
+
+```swift
+func test_UnitTestingBootcampViewModel_isPremium_shouldBeInjectedValue_stress(){
+        for _ in 0..<10 {
+            //Given
+            let usersIsPremium:Bool = Bool.random()
+            //When
+            let vm = UnitTestingViewModel(isPremium: usersIsPremium)
+            //Then
+            XCTAssertEqual(usersIsPremium, vm.isPremium,"预期结果应该是\(usersIsPremium.description)但结果为\(vm.isPremium)")
+        }
+    }
+```
+
+这样，我们就可以检测所有可能性。
+
+现在，我们给`UnitTestingViewModel`添加一个已发布的变量。
+
+```swift
+class UnitTestingViewModel:ObservableObject{
+    @Published var isPremium : Bool
+    @Published var dataArray:[String] = []
+    
+    init(isPremium: Bool) {
+        self.isPremium = isPremium
+    }
+    
+}
+```
+
+我们来编写一个测试方法，按照上面的规则编写方法名（见名知意即可）,检查变量是否被初始化。
+
+~~~admonish example collapsible=true
+```swift
+func test_UnitTestingBootcampViewModel_dataArray_shoudBeEmpty(){
+    //Given
+    
+    //When
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //Then
+    XCTAssertTrue(vm.dataArray.isEmpty,"dataArray对象应该是空的")
+}
+```
+~~~
+
+让我们给`UnitTestingViewModel`添加一个`addItem`方法，给`dataArray`添加内容。
+
+```swift
+func addItem(_ item:String){
+    self.dataArray.append(item)
+}
+```
+
+给它的测试方法是这样的。
+
+```swift
+func test_UnitTestingBootcampViewModel_dataArray_shoudAddItem(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    vm.addItem("Hello")
+    //Then
+    XCTAssertTrue(!vm.dataArray.isEmpty,"数量不应该是0，预期为1")
+    XCTAssertEqual(vm.dataArray, ["Hello"],"内容错误，预期为 Hello")
+}
+```
+
+现在，我们给`UnitTestingViewModel.addItem`添加一段卫语句代码，保护进入的`item`不会是空字符串。
+
+卫语句后面保护的是你所期望的变量状态。
+
+```swift
+func addItem(_ item:String){
+    guard !item.isEmpty else {
+        return
+    }
+    self.dataArray.append(item)
+}
+```
+
+我们再编写一个测试，它将使用一个空白字符串来调用`addItem`方法。
+
+```swift
+func test_UnitTestingBootcampViewModel_dataArray_shoudNotAddBlankString(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    vm.addItem("")
+    //Then
+    XCTAssertTrue(vm.dataArray.isEmpty,"不应该有内容，预期为空")
+}
+```

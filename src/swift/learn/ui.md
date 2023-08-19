@@ -16,6 +16,7 @@
 | Apple设计资源（国内）| <https://developer.apple.com/cn/design/resources/> | 设计资源网站   |
 |Apple设计资源（国外）|<https://developer.apple.com/design/resources/>|Design Resources site|
 |Apple human interface guidelines{{footnote: 苹果人机交互指南}}|<https://developer.apple.com/cn/design/human-interface-guidelines/>|Apple人机交互指南|
+|hackingwithswift（国外） |<https://www.hackingwithswift.com> | hackingwithswift|
 
 ## 笔记
 
