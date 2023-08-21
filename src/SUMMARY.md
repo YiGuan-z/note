@@ -27,6 +27,11 @@
   - [wscat](util/wscat.md)
 
 ---
+# MacOS
+
+- [Rime](MacOS/RimeinputMethod.md)
+
+---
 
 # 编程语言
 

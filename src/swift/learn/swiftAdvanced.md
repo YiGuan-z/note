@@ -2615,3 +2615,639 @@ func test_UnitTestingBootcampViewModel_dataArray_shoudNotAddBlankString(){
     XCTAssertTrue(vm.dataArray.isEmpty,"不应该有内容，预期为空")
 }
 ```
+
+接着，我们再给`UnitTestingViewModel`添加一个发布属性和一个为发布属性赋值的方法。
+
+```swift
+class UnitTestingViewModel:ObservableObject{
+    @Published var isPremium : Bool
+    @Published var dataArray:[String] = []
+    @Published var selectedItem:String? = nil
+        
+    init(isPremium: Bool) {
+        self.isPremium = isPremium
+    }
+    
+    func addItem(_ item:String){
+        guard !item.isEmpty else {
+            return
+        }
+        self.dataArray.append(item)
+    }
+    //该方法会对item的值在dataArray中进行查找，如果存在，就将selectedItem设置为它，如果不存在，就不会进行设置。
+    func selectItem(_ item:String){
+        if let x = dataArray.first(where: { $0 == item }) {
+            selectedItem = x
+        }
+    }
+}
+```
+
+我们现在对`selectedItem`变量编写一个方法进行检测初始化的时候是否为nil
+
+```swift
+func test_UnitTestingBootcampViewModel_selectedItem_shoudStartAsNil(){
+    //Given
+    
+    //When
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //Then
+    XCTAssertNil(vm.selectedItem,"初始化时，预期应该为nil，不应该存在值\(String(describing: vm.selectedItem))")
+}
+```
+
+再对`selectItem`方法进行测试，该方法应该会对dataArray进行查找，如果找到了对应的值，才会设置selectedItem属性，不然就将属性设置为nil。
+
+```swift
+func test_UnitTestingBootcampViewModel_selectedItem_shoudBeNilWhenSelectingInvalidItem(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let i1 = UUID().uuidString
+    vm.addItem(i1)
+    vm.selectItem(i1)
+    vm.selectItem(UUID().uuidString)
+    //Then
+    //测试出错了的话，看看selectItem的逻辑吧。
+    XCTAssertNil(vm.selectedItem,"选择一个错误的值后应当回到nil")
+}
+
+func test_UnitTestingBootcampViewModel_selectedItem_shoudBeSelected(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let item = UUID().uuidString
+    vm.addItem(item)
+    vm.selectItem(item)
+    
+    //Then
+    XCTAssertNotNil(vm.selectedItem,"不应该为nil，因为可选值为\(item)，不应该选择\(String(describing: vm.selectedItem))")
+    XCTAssertEqual(vm.selectedItem, item,"值应为\(item)，当前为\(String(describing: vm.selectedItem))")
+}
+```
+
+接着我们对其添加多个可选项，看看是否能够选择到正确的选项。
+
+```swift
+func test_UnitTestingBootcampViewModel_selectedItem_shoudBeSelected_stress(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    var itemArray:[String] = []
+    
+    let loopCount = Int.random(in: 10..<100)
+    
+    for _ in 0..<loopCount{
+        let item = UUID().uuidString
+        vm.addItem(item)
+        itemArray.append(item)
+    }
+    
+    let randomItem = itemArray.randomElement() ?? ""
+    
+    vm.selectItem(randomItem)
+    //Then
+    XCTAssertNotNil(vm.selectedItem,"不应该为nil，它应该选择\(randomItem)")
+    XCTAssertEqual(vm.selectedItem, randomItem,"应该选择\(randomItem)")
+}
+```
+
+我们再对UnitTestingViewModel添加一个数据保存函数，这个函数用于存储数据，当传入为空或者额通过传入值找不到数据的时候，将会抛出异常。
+
+```swift
+func saveItem(_ item:String) throws{
+    guard !item.isEmpty else{
+        throw DataError.noData
+    }
+    
+    if let x = dataArray.first(where: { $0 == item }) {
+        print("Save! \(x)")
+    }else{
+        throw DataError.itemNotFound
+    }
+}
+
+enum DataError:LocalizedError{
+    case noData
+    case itemNotFound
+}
+```
+
+现在，我们尝试编写对它的测试，测试它能否正确抛出这两个错误。
+
+```swift
+func test_UnitTestingBootcampViewModel_saveItem_shoudThrowError_noData(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let loopCount:Int = Int.random(in: 1..<100)
+    for _ in 0..<loopCount{
+        vm.addItem(UUID().uuidString)
+    }
+    //Then
+    XCTAssertThrowsError(try vm.saveItem(""),"应当抛出noData错误",{ err in
+        let returnErr = err as? UnitTestingViewModel.DataError
+        XCTAssertEqual(returnErr, UnitTestingViewModel.DataError.noData,"应当抛出noData错误")
+    })
+}
+
+func test_UnitTestingBootcampViewModel_saveItem_shoudThrowError_itemNotFound(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let loopCount:Int = Int.random(in: 1..<100)
+    for _ in 0..<loopCount{
+        vm.addItem(UUID().uuidString)
+    }
+    //Then
+    XCTAssertThrowsError(try vm.saveItem(UUID().uuidString),"应当抛出itemNotFound错误",{err in
+        let returnErr = err as? UnitTestingViewModel.DataError
+        XCTAssertEqual(returnErr, UnitTestingViewModel.DataError.itemNotFound,"应当抛出itemNotFound错误")
+    })
+}
+```
+
+再接着测试它的保存功能是否完好。
+
+```swift
+func test_UnitTestingBootcampViewModel_saveItem_shoudSaveItem(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let loopCount:Int = Int.random(in: 1..<100)
+    var itemArray:[String] = []
+    for _ in 0..<loopCount{
+        let newItem = UUID().uuidString
+        vm.addItem(newItem)
+        itemArray.append(newItem)
+    }
+    let randomItem = itemArray.randomElement() ?? ""
+    
+    //Then
+    XCTAssertNoThrow(try vm.saveItem(randomItem))
+}
+```
+
+接着，我们使用`setUpWithError`和`tearDownWithError`进行测试的初始化和收尾工作。
+
+在测试文件的开头编写上这些。
+
+```swift
+var viewModel:UnitTestingViewModel?
+
+override func setUpWithError() throws {
+    // Put setup code here. This method is called before the invocation of each test method in the class.
+    viewModel = UnitTestingViewModel(isPremium: Bool.random())
+}
+
+override func tearDownWithError() throws {
+    // Put teardown code here. This method is called after the invocation of each test method in the class.
+    viewModel = nil
+}
+```
+
+接着我们可以在使用时用下面这段代码来对变量进行初始化判断
+
+```swift
+guard let vm = viewModel else {
+    XCTFail("变量未初始化")
+    return
+}
+```
+
+我们再模拟一个数据服务，更新`UnitTestingViewModel`中的代码。
+
+```swift
+import Foundation
+import Combine
+
+protocol NewDataServiceProtocol {
+    func downloadItemsWithEscaping(completion:@escaping (_ items:[String])->Void)
+    func downloadItemsWithCombine()->AnyPublisher<[String],Error>
+}
+
+class NewMockDataService:NewDataServiceProtocol{
+    enum URLError:Error{
+        case badUrl
+    }
+    let items:[String]
+    
+    init(items: [String]?) {
+        self.items = items ?? [
+            "test1","test2","test3"
+        ]
+    }
+    
+    func downloadItemsWithEscaping(completion:@escaping (_ items:[String])->Void){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: {
+            completion(self.items)
+        })
+    }
+    
+    func downloadItemsWithCombine()->AnyPublisher<[String],Error>{
+        Just(self.items)
+            .tryMap({ publishItems in
+                guard !publishItems.isEmpty else{
+                    throw URLError.badUrl
+                }
+                return publishItems
+            })
+            .eraseToAnyPublisher()
+    }
+    
+}
+
+class UnitTestingViewModel:ObservableObject{
+    @Published var isPremium : Bool
+    @Published var dataArray:[String] = []
+    @Published var selectedItem:String? = nil
+    let dataService:NewDataServiceProtocol
+    var cancellable = Set<AnyCancellable>()
+        
+    init(isPremium: Bool,dataService:NewMockDataService = NewMockDataService(items: nil) ) {
+        self.isPremium = isPremium
+        self.dataService = dataService
+    }
+    
+    func addItem(_ item:String){
+        guard !item.isEmpty else {
+            return
+        }
+        self.dataArray.append(item)
+    }
+    
+    func selectItem(_ item:String){
+        if let x = dataArray.first(where: { $0 == item }) {
+            selectedItem = x
+        }else{
+            selectedItem = nil
+        }
+    }
+    
+    func saveItem(_ item:String) throws{
+        guard !item.isEmpty else{
+            throw DataError.noData
+        }
+        
+        if let x = dataArray.first(where: { $0 == item }) {
+            print("Save! \(x)")
+        }else{
+            throw DataError.itemNotFound
+        }
+    }
+    
+    enum DataError:LocalizedError{
+        case noData
+        case itemNotFound
+    }
+    
+    func downloadWithEscaping(){
+        dataService.downloadItemsWithEscaping {[weak self] returnItem in
+            self?.dataArray = returnItem
+        }
+    }
+    
+    func downloadWithCombine(){
+        dataService.downloadItemsWithCombine()
+            .sink { _ in
+                
+            } receiveValue: {[weak self] returnValue in
+                self?.dataArray = returnValue
+            }
+            .store(in: &cancellable)
+
+    }
+    
+}
+```
+
+编写`downloadWithEscaping`的测试方法
+
+```swift
+func test_UnitTestingBootcampViewModel_downloadWithEscaping_shoudReturnItems(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    vm.downloadWithEscaping()
+    
+    //Then
+    XCTAssertGreaterThan(vm.dataArray.count, 0)
+}
+```
+
+出错了吧，因为我们没有让程序等待异步任务的执行。
+
+```swift
+//该变量应声明在测试类中，它表示为一个可取消的观察者内容集合。
+var cancellabels = Set<AnyCancellable>()
+func test_UnitTestingBootcampViewModel_downloadWithEscaping_shoudReturnItems(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let expectation = XCTestExpectation(description: "Should reutrn items after 3 seconds")
+    vm.$dataArray
+        .dropFirst()
+        .sink { returnItems in
+            expectation.fulfill()
+        }
+        .store(in: &cancellabels)
+    
+    vm.downloadWithEscaping()
+    
+    //Then
+    wait(for: [expectation], timeout: 5)
+    XCTAssertGreaterThan(vm.dataArray.count, 0)
+}
+```
+
+我们让程序延时了5秒再进行数量检测，这次就能检查成功了。
+
+让我们再编写一个测试来对`downloadWithCombine`进行测试。
+
+```swift
+func test_UnitTestingBootcampViewModel_downloadWithCombine_shoudReturnItems(){
+    //Given
+    let vm = UnitTestingViewModel(isPremium: Bool.random())
+    //When
+    let expectation = XCTestExpectation(description: "Should reutrn items after a seconds")
+    vm.$dataArray
+        .dropFirst()
+        .sink { returnItems in
+            expectation.fulfill()
+        }
+        .store(in: &cancellabels)
+    
+    vm.downloadWithCombine()
+    
+    //Then
+    wait(for: [expectation], timeout: 5)
+    XCTAssertGreaterThan(vm.dataArray.count, 0)
+}
+```
+
+当然，我们不能让我们的模拟服务和它的协议在一个位置，我们单独创建`NewMockDataService.swift`来容纳它。
+
+然后创建一个新的测试，用来测试`NewMockDataService`。
+
+```swift
+func test_NewMockDataService_init_doesSetValueCorrectly(){
+    //Given
+    let item:[String]? = nil
+    let item1:[String]? = []
+    let item2:[String]? = ["a","b","c"]
+    //When
+    let dataService = NewMockDataService(items: item)
+    let dataService1 = NewMockDataService(items: item1)
+    let dataService2 = NewMockDataService(items: item2)
+    //Then
+    XCTAssertFalse(dataService.items.isEmpty,"应当存在默认数据")
+    XCTAssertTrue(dataService1.items.isEmpty,"应当使用传入的数组")
+    XCTAssertTrue(dataService2.items.count == item2?.count,"传入数据数量不一致")
+}
+```
+
+接下来检查它的两个功能接口并写上对应测试方法。
+
+```swift
+var cancellable = Set<AnyCancellable>()
+func test_NewMockDataService_downloadItemsWithEscaping_doesReturnValues(){
+    //Given
+    let dataService = NewMockDataService(items: nil)
+    //When
+    var items:[String] = []
+    let expectation = XCTestExpectation(description: "get items array by downloadItemsWithEscaping")
+    
+    dataService.downloadItemsWithEscaping { returnItems in
+        items = returnItems
+        expectation.fulfill()
+    }
+    
+    wait(for: [expectation],timeout: 5)
+    //Then
+    XCTAssertEqual(items.count, dataService.items.count,"数量不一致")
+}
+
+func test_NewMockDataService_downloadItemsWithCombine_doesReturnValues(){
+    //Given
+    let dataService = NewMockDataService(items: nil)
+    //When
+    var items:[String] = []
+    let expectation = XCTestExpectation(description: "get items array by downloadItemsWithEscaping")
+    
+    dataService.downloadItemsWithCombine()
+        .sink { completion in
+            switch completion{
+            case .finished:
+                expectation.fulfill()
+                break
+            case .failure(let e):
+                XCTFail(e.localizedDescription)
+            }
+        } receiveValue: { returnItems in
+            items = returnItems
+        }
+        .store(in: &cancellable)
+
+    
+    wait(for: [expectation],timeout: 5)
+    //Then
+    XCTAssertEqual(items.count, dataService.items.count,"数量不一致")
+}
+```
+
+再对抛出的异常进行检查。
+
+在这里，我们使用了`XCTestExpectation`来编写了两个测试预期。
+
+一个表示应该有一个异常抛出，一个表示这个异常的类型必须是`URLError`
+
+```swift
+func test_NewMockDataService_downloadItemsWithCombine_doesFail(){
+    //Given
+    let dataService = NewMockDataService(items: [])
+    //When
+    
+    let expectation = XCTestExpectation(description: "Does throw an error")
+    let expectation1 = XCTestExpectation(description: "Does throw NewMockDataService.URLError.badUrl")
+    
+    dataService.downloadItemsWithCombine()
+        .sink { completion in
+            
+            switch completion{
+            case .finished:
+                XCTFail("应该抛出异常，因为初始数据为空")
+            case .failure(let e):
+                expectation.fulfill()
+                let err = e as? NewMockDataService.URLError
+                XCTAssertEqual(err, NewMockDataService.URLError.badUrl)
+                expectation1.fulfill()
+            }
+        } receiveValue: { _ in
+            
+        }
+        .store(in: &cancellable)
+
+    //Then
+    wait(for: [expectation,expectation1],timeout: 5)
+    
+}
+```
+
+### UI Testing
+
+被测试的页面
+
+```swift
+import SwiftUI
+
+class UITestingViewBootcampModel: ObservableObject {
+    let placeholderText:String = "Add your name..."
+    @Published var textField:String = ""
+    @Published var currentUserIsSignedIn:Bool = false
+    
+    func singUpButtonPressed(){
+        //check textField
+        guard !textField.isEmpty else {
+            return
+        }
+        
+        self.currentUserIsSignedIn = true
+    }
+}
+
+struct UITestingViewBootcamp: View {
+    @StateObject private var vm = UITestingViewBootcampModel()
+    var body: some View {
+        ZStack{
+            LinearGradient(colors: [.blue,.black], startPoint: .topLeading, endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            ZStack{
+                if vm.currentUserIsSignedIn{
+                    //content
+                    SignInHomeView()
+                        .transition(.move(edge: .trailing))
+                }else {
+                    signUpLayer
+                        .transition(.move(edge: .leading))
+                }
+            }
+            .frame(maxWidth: .infinity,maxHeight: .infinity)
+            
+            
+            
+        }
+    }
+}
+
+extension UITestingViewBootcamp{
+    private var signUpLayer : some View{
+        VStack{
+            TextField(vm.placeholderText, text: $vm.textField)
+                .font(.headline)
+                .padding()
+                .background(Color.white)
+                .cornerRadius(10)
+            
+            Button {
+                withAnimation(.spring()) {
+                    vm.singUpButtonPressed()
+                }
+            } label: {
+                Text("Sign Up")
+                    .font(.headline)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+
+        }
+        .padding()
+    }
+}
+
+struct SignInHomeView:View {
+    @State private var showAlert:Bool = false
+    
+    var body: some View {
+        NavigationView{
+            VStack(spacing:20){
+                Text("message...")
+                
+                Button {
+                    showAlert.toggle()
+                } label: {
+                    Text("Show welcome alert!")
+                        .withTextLabel()
+                }
+                .alert(isPresented: $showAlert, content: {
+                    Alert(title: Text("Welcome to the app!"))
+                })
+                
+                NavigationLink(
+                    destination:
+                        Text("Destination")
+                        .withTextLabel(background: .green)
+                        .padding()
+                    ,
+                    label: {
+                        Text("Navigate")
+                            .withTextLabel(background: .red)
+                    }
+                )
+                
+                
+            }
+            .padding()
+            .navigationTitle("weclome!")
+            
+        }
+    }
+}
+
+#Preview {
+    UITestingViewBootcamp()
+}
+
+
+extension Text{
+    func withTextLabel(font:Font = .headline,background:Color = .blue,textColor:Color = .white)->some View{
+        modifier(TextButtonModifier(font: font,background: background,textColor: textColor))
+    }
+    
+    func withTextLabel()->some View{
+        modifier(TextButtonModifier())
+    }
+}
+
+struct TextButtonModifier: ViewModifier{
+    let font:Font
+    let background:Color
+    let textColor:Color
+    
+    init(font: Font = .headline, background: Color = .blue, textColor: Color = .white) {
+        self.font = font
+        self.background = background
+        self.textColor = textColor
+    }
+    
+    func body(content: Content) -> some View{
+        content
+            .font(font)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(background)
+            .foregroundColor(textColor)
+            .cornerRadius(10)
+    }
+}
+```
+
+检查目标
+
+- 在第一个页面中，用户在未输入信息的情况下，不会转到下一个界面。
+- 在第二个页面中，用户点击显示欢迎警告，会弹出一条警告消息，并且点击ok后能够消失。
+- 在第二个页面中，用户点击Navigate按钮能够正确跳转到destination页面。
+- 在destination的页面中，点击左上角的会退按钮能够正确回退。
