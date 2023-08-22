@@ -3251,3 +3251,81 @@ struct TextButtonModifier: ViewModifier{
 - 在第二个页面中，用户点击显示欢迎警告，会弹出一条警告消息，并且点击ok后能够消失。
 - 在第二个页面中，用户点击Navigate按钮能够正确跳转到destination页面。
 - 在destination的页面中，点击左上角的会退按钮能够正确回退。
+
+就像我们在单元测试中的那样，我们需要先为它创建一个target，不过这次我们选择的是UI Testing Bundle，然后一路点击确认。
+
+我本人还是建议去看一看苹果官方给我们留下的注释。
+
+让我们创建我们第一个测试文件，还记得我们之间怎么创建的吗？
+
+我们要尽量和代码文件保持一致，只需要在它后面添加上`_UITests`后缀即可。
+
+测试的方法名也和我们之前的单元测试用一个规则，最好是见名知意，无果无法做到见名知意，还请留下一个显眼的注释。
+
+`test_[struct]_[ui component]_[expected result]`
+
+编写完方法名后，我们就可以点击左下角的一个红色小圆点。
+
+![红色小圆点](https://raw.githubusercontent.com/YiGuan-z/images/master/1/202308211848264.jpg)
+
+在弹出的模拟器中执行你需要的操作。
+
+请注意，生成的代码中可能有着多个app实例，并且还包含不知道哪里冒出来的错误引用。这时候我们就可以手动修改错误引用并且使用我们的GWT结构进行重写。
+
+```swift
+final class UITestingBootcampView_UITests: XCTestCase {
+    
+    let app = XCUIApplication()
+
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        app.launch()
+    }
+
+    override func tearDownWithError() throws {
+    }
+    
+    func test_UITestingViewBootcamp_signUpButton_shouldNotSignIn(){
+        let app = app
+        let signUpButton = app.buttons["Sign Up"]
+        signUpButton.tap()
+        let navBar = app.navigationBars["weclome!"]
+        
+        XCTAssertFalse(navBar.exists,"不应该进入下一级")
+        
+    }
+    
+    func test_UITestingViewBootcamp_signUpButton_shouldSignIn(){
+        //Given
+        let textField = app.textFields["Add your name..."]
+        //When
+        textField.tap()
+        let keyA = app.keys["a"]
+        keyA.tap()
+        let keya = app.keys["a"]
+        keya.tap()
+        keya.tap()
+        
+        let returnButton = app.buttons["Return"]
+        returnButton.tap()
+        let signUpButton = app.buttons["Sign Up"]
+        signUpButton.tap()
+        let navBar = app.navigationBars["weclome!"]
+        //Then
+        XCTAssertTrue(navBar.exists)
+    }
+   
+}
+```
+
+> 不知道怎么回事，我可能是版本高了，点击测试，都不带弹出模拟器的，一看流程，Testing... 只能使用真机来进行测试了。
+
+不要过于信任Xcode为你生成的代码，它真的只记录你的操作，Assert是一个都没有。
+
+这其中有一个致命性Bug，在这些测试中，它寻找按钮和输入框的方式是通过它上面的文本进行的查找，这就导致如果我们修改了文本，那么就无法定位到这个元素。
+
+对于这个问题，我们需要在我们的`UITestingViewBootcamp`中，为对应的内容添加上`accessibilityIdentifier("tag")`，以便测试框架能够识别到它。
+
+为对应内容添加上`accessibilityIdentifier`后，我们只需要将`let textField = app.textFields["Add your name..."]`
+替换为`let textField = app.textFields["yourTag"]`即可。
+
