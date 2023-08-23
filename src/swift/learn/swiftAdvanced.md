@@ -3329,3 +3329,151 @@ final class UITestingBootcampView_UITests: XCTestCase {
 为对应内容添加上`accessibilityIdentifier`后，我们只需要将`let textField = app.textFields["Add your name..."]`
 替换为`let textField = app.textFields["yourTag"]`即可。
 
+以下为测试代码
+~~~admonish example collapsible=true
+```swift
+let app = XCUIApplication()
+
+override func setUpWithError() throws {
+    continueAfterFailure = false
+    app.launch()
+}
+
+override func tearDownWithError() throws {
+}
+
+func test_UITestingViewBootcamp_signUpButton_shouldNotSignIn(){
+    //Given
+    let app = app
+    let signUpButton = app.buttons["SignUpButton"]
+    //When
+    signUpButton.tap()
+    let navBar = app.navigationBars["weclome!"]
+    //Then
+    XCTAssertFalse(navBar.exists,"不应该进入下一级")
+    
+}
+
+func test_UITestingViewBootcamp_signUpButton_shouldSignIn(){
+    //Given
+    let textField = app.textFields["SignUpTextField"]
+    //When
+    textField.tap()
+    let keyA = app.keys["a"]
+    keyA.tap()
+    let keya = app.keys["a"]
+    keya.tap()
+    keya.tap()
+    
+    let returnButton = app.buttons["Return"]
+    returnButton.tap()
+    let signUpButton = app.buttons["SignUpButton"]
+    signUpButton.tap()
+    let navBar = app.navigationBars["weclome!"]
+    //Then
+    XCTAssertTrue(navBar.exists)
+}
+
+func test_UITestingViewBootcamp_showAlert_shouldDisplayAlert(){
+    let singUpText = app.textFields["SignUpTextField"]
+    singUpText.tap()
+    
+    let keyA = app.keys["a"]
+    let keya = app.keys["a"]
+    keyA.tap()
+    keya.tap()
+    keya.tap()
+    let signUpButton = app.buttons["SignUpButton"]
+    let showAlert = app.buttons["showAlertButton"]
+    signUpButton.tap()
+    showAlert.tap()
+    
+    let elementsQuery = app.alerts.firstMatch.scrollViews.otherElements
+    XCTAssertTrue(elementsQuery.element.exists)
+    
+}
+func test_UITestingViewBootcamp_showAlert_shouldDisplayAndDismissAlert(){
+    let singUpText = app.textFields["SignUpTextField"]
+    singUpText.tap()
+    
+    let keyA = app.keys["a"]
+    let keya = app.keys["a"]
+    keyA.tap()
+    keya.tap()
+    keya.tap()
+    let signUpButton = app.buttons["SignUpButton"]
+    let showAlert = app.buttons["showAlertButton"]
+    signUpButton.tap()
+    showAlert.tap()
+    
+    let alertPrompt = app.alerts.firstMatch
+    
+    let elementsQuery = alertPrompt.scrollViews.otherElements
+    XCTAssertTrue(elementsQuery.element.exists)
+    
+    let alertOkButton = elementsQuery.buttons["OK"]
+    let alertOkButtonExists = alertOkButton.waitForExistence(timeout: 5)
+    XCTAssertTrue(alertOkButtonExists)
+    
+    alertOkButton.tap()
+    
+    XCTAssertFalse(alertPrompt.exists)
+}
+
+func test_UITestingViewBootcamp_navigationLinkToDestination_shouldNavigateToDestination(){
+    let signuptextfieldTextField = app.textFields["SignUpTextField"]
+    signuptextfieldTextField.tap()
+    
+    let AKey = app.keys["a"]
+    let aKey = app.keys["a"]
+    AKey.tap()
+    aKey.tap()
+    aKey.tap()
+    aKey.tap()
+    app.buttons["Return"].tap()
+    app.buttons["SignUpButton"].tap()
+    app.buttons["NavigationLinkToDestination"].tap()
+    let text = app.staticTexts["Destination"]
+    
+    XCTAssertTrue(text.exists)
+}
+
+func test_UITestingViewBootcamp_navigationLinkToDestination_shouldNavigateToDestinationAndGoBack(){
+    
+    let signuptextfieldTextField = app.textFields["SignUpTextField"]
+    signuptextfieldTextField.tap()
+    signuptextfieldTextField.tap()
+    
+    let AKey = app.keys["a"]
+    AKey.tap()
+    let aKey = app.keys["a"]
+    aKey.tap()
+    aKey.tap()
+    aKey.tap()
+    app.buttons["Return"].tap()
+    app.buttons["SignUpButton"].tap()
+    
+    let togglesidebarButton = app.navigationBars["_TtGC7SwiftUI19UIHosting"].buttons["ToggleSidebar"]
+    togglesidebarButton.tap()
+    app.buttons["NavigationLinkToDestination"].tap()
+    togglesidebarButton.tap()
+    app.staticTexts["message..."].tap()
+    app.buttons["showAlertButton"].tap()
+    app.alerts["Welcome to the app!"].scrollViews.otherElements.buttons["OK"].tap()
+                
+
+}
+```
+~~~
+
+由生成的代码为主，我们只需要修改一下生成的错误引用再对里面的内容进行Assert即可。
+
+我用的是pad，左上角没有回退按钮用自己生成的代码即可。
+
+## Publishers and Subscribers
+
+```admonish info
+Swift中的combine可以理解为Kotlin中的flow，它可以表示许多种类的异步事件，并将他们组合起来。
+
+更多的介绍<https://www.icodesign.me/posts/swift-combine/>
+```

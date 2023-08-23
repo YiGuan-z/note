@@ -49,7 +49,7 @@
 - [kotlin](kotlin/learn/readme.md)
   - [kotlin的注意事项](kotlin/learn/warning.md)
   - [可重载运算符列表](kotlin/operator/list.md)
-  - [kotlin小技巧]()
+  - [kotlin小技巧](kotlin/learn/tips.md)
   - [kotlin关键字表]()
   - [ktor](kotlin/ktor/readme.md)
     - [使用ktor创建一个webSocket聊天服务器](kotlin/ktor/chatServer.md)
@@ -76,6 +76,7 @@
   - [IOS15](swift/learn/ios15.md)
   - [编码中遇到的问题](swift/learn/bug.md)
   - [swift高级](swift/learn/swiftAdvanced.md)
+    - [combine in swift](swift/learn/swift-combine.md)
 
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
