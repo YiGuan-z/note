@@ -3477,3 +3477,304 @@ Swift中的combine可以理解为Kotlin中的flow，它可以表示许多种类�
 
 更多的介绍<https://www.icodesign.me/posts/swift-combine/>
 ```
+
+```swift
+import SwiftUI
+import Combine
+
+class AdviceCombineDataService{
+    @Published var basicPublisher:[String] = []
+    
+    init(){
+        publishFackData()
+    }
+    
+    private func publishFackData(){
+        DispatchQueue.main.asyncAfter(deadline: .now()+1){ [weak self] in
+            self?.basicPublisher = ["a","b","c"]
+        }
+    }
+}
+
+class AdviceCombineBootcampViewModel:ObservableObject{
+    @Published var data:[String] = []
+    
+    private let dataService = AdviceCombineDataService()
+    
+    var cancellable = Set<AnyCancellable>()
+    
+    init(){
+        addSubscribers()
+    }
+    
+    private func addSubscribers(){
+       dataService.$basicPublisher
+            .sink { completion in
+                switch completion{
+                case .finished:
+                    break
+                case .failure(let err):
+                    print("[Error]: \(err.localizedDescription)")
+                    break
+                }
+            } receiveValue:{[weak self] returnValue in
+                self?.data = returnValue
+            }
+            .store(in: &cancellable)
+    }
+}
+
+struct AdviceCombineBootcamp: View {
+    
+    @StateObject private var vm:AdviceCombineBootcampViewModel = AdviceCombineBootcampViewModel()
+    
+    var body: some View {
+        ScrollView{
+            VStack{
+                ForEach(vm.data,id: \.self){ item in
+                    Text(item)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .frame(height: 55)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                }
+            }
+        }    
+    }
+}
+
+#Preview {
+    AdviceCombineBootcamp()
+}
+```
+
+我们在service中模拟了一个数组用于发布数据，但事实上，我们在运行完一次后没有调用取消方法，所以这个流程是可以继续发布的，我们可以将service中的数组修改为单个数据，让viewModel单独进行订阅。
+
+```swift
+class AdviceCombineDataService{
+    //这里
+    @Published var basicPublisher:String = ""
+    
+    init(){
+        publishFackData()
+    }
+    
+    private func publishFackData(){
+        let item =  ["a","b","c"]
+        
+        for x in item.indices{
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(x)){ [weak self] in
+                self?.basicPublisher = item[x]
+            }
+        }
+        
+    }
+}
+
+class AdviceCombineBootcampViewModel:ObservableObject{
+    @Published var data:[String] = []
+    
+    private let dataService = AdviceCombineDataService()
+    
+    var cancellable = Set<AnyCancellable>()
+    
+    init(){
+        addSubscribers()
+    }
+    
+    private func addSubscribers(){
+       dataService.$basicPublisher
+            //过滤掉空字符串
+            .filter({!$0.isEmpty})
+            .sink { completion in
+                switch completion{
+                case .finished:
+                    break
+                case .failure(let err):
+                    print("[Error]: \(err.localizedDescription)")
+                    break
+                }
+            } receiveValue:{[weak self] returnValue in
+                self?.data.append(returnValue)
+            }
+            .store(in: &cancellable)
+    }
+}
+
+struct AdviceCombineBootcamp: View {
+    
+    @StateObject private var vm:AdviceCombineBootcampViewModel = AdviceCombineBootcampViewModel()
+    
+    var body: some View {
+        ScrollView{
+            VStack{
+                ForEach(vm.data,id: \.self){ item in
+                    Text(item)
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .frame(height: 55)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        .padding(.horizontal)
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    AdviceCombineBootcamp()
+}
+
+```
+
+如果我们不使用`@Published`包装器来对我们需要发布的内容的话，我们可以使用`CurrentValueSubject`或者`PassthroghSubject`来做到这一点。
+
+```swift
+class AdviceCombineDataService{
+    //@Published var basicPublisher:String = ""
+    let currentValuePublisher = CurrentValueSubject<String,Error>("")
+    
+    init(){
+        publishFackData()
+    }
+    
+    private func publishFackData(){
+        let item =  ["a","b","c"]
+        
+        for x in item.indices{
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(x)){ [weak self] in
+                self?.currentValuePublisher.send(item[x])
+                
+            }
+        }
+        
+    }
+}
+
+class AdviceCombineBootcampViewModel:ObservableObject{
+    @Published var data:[String] = []
+    
+    private let dataService = AdviceCombineDataService()
+    
+    var cancellable = Set<AnyCancellable>()
+    
+    init(){
+        addSubscribers()
+    }
+    
+    private func addSubscribers(){
+        dataService.currentValuePublisher
+            .filter({!$0.isEmpty})
+            .sink { completion in
+                switch completion{
+                case .finished:
+                    break
+                case .failure(let err):
+                    print("[Error]: \(err.localizedDescription)")
+                    break
+                }
+            } receiveValue:{[weak self] returnValue in
+                self?.data.append(returnValue)
+            }
+            .store(in: &cancellable)
+    }
+}
+```
+
+我们只需要更换发布者即可别忘记更换`addSubscribers`中监听的发布者。
+
+也可以将其替换为`PassthroughSubject<String,Error>()`，因为我们不需要捕获状态。
+
+`CurrentValuesSubject`用于表示状态，它捕获了值并在值更改时发布新元素。而`PassthroughSubject`表示事件，它不会捕获状态，只会将值传递给订阅者，如果没有订阅者，则会将值丢弃。
+
+现在将服务发送的数据替换为整数，因为整数更加容易生成更多数字。
+
+```swift
+class AdviceCombineDataService{
+    let passThroughPublisher = PassthroughSubject<Int,Error>()
+    init(){
+        publishFackData()
+    }
+    
+    private func publishFackData(){
+        let item =  Array(0..<11)
+        
+        for x in item.indices{
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(x)){ [weak self] in
+                self?.passThroughPublisher.send(item[x])
+
+                if x == item.indices.last{
+                    self?.passThroughPublisher.send(completion: .finished)
+                }
+            }
+        }
+        
+    }
+}
+
+class AdviceCombineBootcampViewModel:ObservableObject{
+    @Published var data:[String] = []
+    
+    private let dataService = AdviceCombineDataService()
+    
+    var cancellable = Set<AnyCancellable>()
+    
+    init(){
+        addSubscribers()
+    }
+    
+    private func addSubscribers(){
+        dataService.passThroughPublisher
+            //在这里对数据进行转换
+            .map({String($0)})
+            .sink { completion in
+                switch completion{
+                case .finished:
+                    break
+                case .failure(let err):
+                    print("[Error]: \(err.localizedDescription)")
+                    break
+                }
+            } receiveValue:{[weak self] returnValue in
+                withAnimation(.interactiveSpring){
+                    self?.data.append(returnValue)
+                }
+            }
+            .store(in: &cancellable)
+    }
+}
+```
+
+接下来在`addSubscribers`方法中的map之前进行操作。
+
+我们来熟悉一下combine的API。
+
+---
+Sequence Operations
+|Api|作用|
+|:---:|:---:|
+|first|只允许获取一个数据|
+|first(where:)|获取第一个符合条件的数据|
+|tryFirst(where:)|是first(where:)可抛异常的版本|
+|last|只获取最后一个数据（在我们的demo中，需要手动发送completion，这样才能得知谁是最后一个）|
+|last(where:)|获取最后一个符合条件的数据|
+|tryLast(where:)|获取最后一跳数据的可抛异常版本|
+|dropFirst|丢弃掉第一个|
+|dropFirst(_ count:)|丢弃掉前几个|
+|drop(while:)|丢弃掉返回为true的值，直到返回false|
+|tryDrop(while:)|可抛出异常的丢弃值|
+|prefix(_ maxLength:)|获取前几个数据|
+|prefix(while:)|返回表达式为true的前几个数据|
+|tryPrefix(while:)|可抛异常的prefix|
+|outPut(at:)|获取对应索引的数据|
+|outPut(in:)|获取范围数据中的值|
+
+---
+Mathematic Operations

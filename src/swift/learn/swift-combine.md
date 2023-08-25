@@ -334,6 +334,150 @@ print(student.score)
 // 100
 ```
 
-在这个demo中，由于我们有一个Assign订阅者，绑定了student对象中的score变量，所以，我们往发布者里面发送一个值，与之关联的订阅者都会被更新字段，看上去很适合级联操作。
+在这个demo中，由于我们有一个Assign订阅者，绑定了student对象中的score变量，所以，我们往发布者里面发送一个值，与之关联的订阅者都会被更新字段，看上去很适合级联操作，不过适不适合我就不知道了。
+
+**Subject**
+
+我们想随时在Publisher中写入值来通知订阅者，在Rx{{footnote:这个单词一般指的是响应式编程，不过在这里应该指的是combine}}中也提供了一个`Subject`类型来实现。`Subject`通常是一个中间代理，即可以作为Publisher，也可作为Observer。以下是`Subject`的定义。
+
+```swift
+public protocol Subject : AnyObject, Publisher {
+    func send(_ value: Self.Output)
+
+    func send(completion: Subscribers.Completion<Self.Failure>)
+
+    func send(subscription: Subscription)
+}
+```
+
+当作为观察者的时候，可以通过Publisher的subscribe(_:Subject)方法订阅某一个Publisher。
+
+作为Publisher的时候，可以主动通过Subject的send方法往数据流中插入数据。在Combine中，有三个常用的Subject。
+
+- AnySubject
+- CurrentValueSubject
+- PassthroughSubject
+
+使用Subject可以将一部分现有的代码转化为Reactive，有一个比较典型的使用场景是：
+
+```swift
+// Before
+class ContentManager {
+
+    var content: [String] {
+        didSet {
+            delegate?.contentDidChange(content)
+        }
+    }
+
+    func getContent() {
+        content = ["hello", "world"]
+    }
+}
+
+// After
+class RxContentController {
+
+    var content = CurrentValueSubject<[String], NSError>([])
+
+    func getContent() {
+        content.value = ["hello", "world"]
+    }
+}
+```
+
+CurrentValueSubject它具有一个初始设定值，包装单个值并且在值更改时发布新的元素。在上面调用send会更新当前值，等同于直接对值进行更新。
+
+```swift
+import Combine
+
+let subject = CurrentValueSubject<Int, Never>(0)
+
+let subscription = subject
+    //在这里订阅
+    .sink { value in
+        print("Received value: \(value)")
+    }
+//开始发布值
+subject.send(1)
+subject.send(2)
+subject.value = 3
+/**
+Received value: 0
+Received value: 1
+Received value: 2
+Received value: 3
+ */
+```
+
+PassthroughSubject 和 CurrentValueSubject 几乎一样，只是没有初始值，也不会保存任何值。
+
+**Cancellable**
+
+`cancellable`表示为是一个可取消的操作，在combine中，可以尝试发布内容，在序列处理的时候编写一个任务用于取消这个内容处理的操作。
+
+```swift
+import Combine
+
+var cancellable: AnyCancellable?
+
+cancellable = Timer.publish(every: 1.0, on: .main, in: .common)
+    .autoconnect()
+    .sink { _ in
+        print("Timer fired")
+    }
+
+DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+    cancellable?.cancel()
+}
+```
 
 ### Operator
+
+操作符是combine的重要组成部分，可以将这些操作符看作Java的Stream操作符（因为这个流传度最广）。
+
+- 转换操作符：
+  - map/mapError（值映射）
+  - flatMap
+  - replaceNil（将nil替换为你指定的内容）
+  - scan（将收到的值与当前的值按照给定的闭包进行转换。）
+  - setFailureType（强制上游设置指定的错误类型，是对上游错误的泛型约束）
+- 过滤操作符
+  - filter（过滤出符合条件的数据）
+  - compactMap（和map功能一致，但是会自动过滤空内容）
+  - removeDuplicates（会跳过之前出现的值）
+  - replaceEmpty/replaceError（如果上游数据为空，那么就发送指定值，如果因错误终止，就会发送指定的值，然后正常结束）
+- reduce操作符
+  - collect
+  - ignoreOutput
+  - reduce
+- 运算操作符
+  - count
+  - min/max
+- 匹配操作符
+  - contains（返回一个bool表示收到的值时候包含满足的条件，一旦满足就会发送true，如果不满足，则会不满足，知道满足或者结束）
+  - allSatisfy（返回一个bool值表示所有收到的值时候满足给定的条件，一旦收到了不满足的值，就会立即返回false，如果一直满足，就会一直满足，知道结束）
+- 序列操作符
+  - drop/dropFirst（对值进行丢弃）
+  - append/prepend
+  - prefix/first/last/output
+- 组合操作符
+  - combineLatest
+  - merge
+  - zip
+- 错误处理操作符
+  - assertNoFailure
+  - catch
+  - retry
+- 时间控制操作符
+  - measureTimeInterval
+  - debounce
+  - delay
+  - throttle
+  - timeout
+- 其它操作符
+  - encode/decode
+  - switchToLatest
+  - share
+  - breakpoint/breakpointOnError
+  - handleEvents
