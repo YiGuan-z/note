@@ -62,6 +62,7 @@
     - [使用ktorm开发过程中遇到的问题](ktorm/problem.md)
   - [flyway数据库版本控制](kotlin/flyway/readme.md)
   - [编写一个简易定时器](kotlin/timer/readme.md)
+  - [SpringBoot](kotlin/spring/project.md)
 - [go语言]()
   - [go语言小技巧](goland/gotips.md)
 - [rust]()
@@ -81,6 +82,7 @@
 - [一些杂谈](miscellanies/readme.md)
   - [关于在jvm上修改字符串缓存](miscellanies/change-jvm-string.md)
   - [关于List的快速迭代和@HidesMembers](miscellanies/fastForEach-and-@HideMebers.md)
+  - [关于内存泄漏](miscellanies/memoryLeak.md)
 
 ---
 
